@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>JAMES INDEX · 全球市场情绪与半导体产业链监控</title>
+  <title>JAMES INDEX · 全球市场情绪与半导体产业链终端</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600;700&display=swap');
@@ -26,9 +26,6 @@
       border-color: rgba(56, 189, 248, 0.35);
       box-shadow: 0 12px 30px -10px rgba(0, 0, 0, 0.7);
     }
-    .section-body {
-      transition: all 0.25s ease;
-    }
     .section-collapsed .section-body {
       display: none;
     }
@@ -44,40 +41,55 @@
 
   <!-- 顶部状态与控制栏 -->
   <header class="sticky top-0 z-40 border-b border-white/[0.06] bg-[#070b14]/90 backdrop-blur-md">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-4">
-      <div class="flex items-center gap-3">
-        <div class="w-8 h-8 rounded-lg bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400 font-bold text-sm">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-3">
+      <div class="flex items-center gap-3 min-w-0">
+        <div class="w-8 h-8 rounded-lg bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400 font-bold text-sm shrink-0">
           JI
         </div>
-        <div>
+        <div class="min-w-0">
           <div class="flex items-center gap-2">
-            <span class="font-bold tracking-tight text-white text-base sm:text-lg">JAMES INDEX</span>
-            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+            <span class="font-bold tracking-tight text-white text-base sm:text-lg truncate">JAMES INDEX</span>
+            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 shrink-0">
               <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-              5m 自动刷新
+              5m 轮询
             </span>
           </div>
-          <p class="text-[11px] text-slate-400 hidden sm:block">同一把尺（0–100）· 全球跨市场情绪、美债曲线与半导体传导链监控</p>
+          <p class="text-[11px] text-slate-400 hidden lg:block">同一把尺（0–100）· 全球市场情绪、美债曲线与半导体/算力/云软件产业链终端</p>
         </div>
       </div>
 
-      <div class="flex items-center gap-2 sm:gap-3">
+      <!-- 快捷代码查询框 -->
+      <div class="hidden md:flex items-center gap-1.5 bg-white/[0.04] border border-white/[0.08] rounded-lg px-2.5 py-1 focus-within:border-emerald-500/50">
+        <input id="quickSymbolInput" type="text" placeholder="输入代码查询 (如 CRDO, ALAB, SMCI)..." 
+          onkeydown="if(event.key==='Enter') handleQuickLookup()"
+          class="bg-transparent text-xs text-white placeholder-slate-500 focus:outline-none w-52 font-mono-num uppercase" />
+        <button onclick="handleQuickLookup()" class="px-2 py-0.5 rounded bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 text-[11px] font-medium transition">
+          查询
+        </button>
+      </div>
+
+      <div class="flex items-center gap-1.5 sm:gap-2 shrink-0">
         <!-- 倒计时显示 -->
-        <div class="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/[0.03] border border-white/[0.06] text-xs text-slate-300 font-mono-num">
-          <span class="text-slate-500">下次刷新</span>
+        <div class="hidden xl:flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-white/[0.03] border border-white/[0.06] text-xs text-slate-300 font-mono-num">
+          <span class="text-slate-500">刷新</span>
           <span id="countdownTimer" class="text-emerald-400 font-semibold">05:00</span>
         </div>
 
-        <button onclick="refreshAllData(true)" class="px-3 py-1.5 rounded-lg bg-white/[0.05] hover:bg-white/[0.1] border border-white/[0.08] text-xs font-medium text-slate-200 transition flex items-center gap-1.5">
+        <button onclick="refreshAllData(true)" title="立即刷新数据" class="px-2.5 py-1.5 rounded-lg bg-white/[0.05] hover:bg-white/[0.1] border border-white/[0.08] text-xs font-medium text-slate-200 transition flex items-center gap-1">
           <span id="refreshSpinner">↻</span>
-          <span>立即刷新</span>
+          <span class="hidden sm:inline">刷新</span>
         </button>
 
-        <button onclick="toggleAllSections(true)" class="px-2.5 py-1.5 rounded-lg bg-white/[0.03] hover:bg-white/[0.08] border border-white/[0.06] text-xs text-slate-300 transition">
-          全部展开
+        <button onclick="openApiModal()" class="px-2.5 py-1.5 rounded-lg bg-sky-500/15 hover:bg-sky-500/25 border border-sky-500/30 text-xs font-medium text-sky-300 transition flex items-center gap-1">
+          <span>⚙</span>
+          <span>API 接入</span>
         </button>
-        <button onclick="toggleAllSections(false)" class="px-2.5 py-1.5 rounded-lg bg-white/[0.03] hover:bg-white/[0.08] border border-white/[0.06] text-xs text-slate-300 transition">
-          全部折叠
+
+        <button onclick="toggleAllSections(true)" class="px-2 py-1.5 rounded-lg bg-white/[0.03] hover:bg-white/[0.08] border border-white/[0.06] text-xs text-slate-300 transition">
+          展开
+        </button>
+        <button onclick="toggleAllSections(false)" class="px-2 py-1.5 rounded-lg bg-white/[0.03] hover:bg-white/[0.08] border border-white/[0.06] text-xs text-slate-300 transition">
+          折叠
         </button>
       </div>
     </div>
@@ -85,11 +97,21 @@
 
   <main class="max-w-7xl mx-auto px-4 sm:px-6 py-8 space-y-10">
 
-    <!-- ==================== 模块 1：全球市场情绪（8大跨资产） ==================== -->
+    <!-- 移动端快捷代码查询条 -->
+    <div class="flex md:hidden items-center gap-2 bg-white/[0.04] border border-white/[0.08] rounded-xl p-2">
+      <input id="quickSymbolInputMobile" type="text" placeholder="输入任意代码查询 (如 CRDO, ALAB, PLTR)..." 
+        onkeydown="if(event.key==='Enter') handleQuickLookup(true)"
+        class="bg-transparent text-xs text-white placeholder-slate-500 focus:outline-none flex-1 px-2 font-mono-num uppercase" />
+      <button onclick="handleQuickLookup(true)" class="px-3 py-1.5 rounded-lg bg-emerald-500/20 text-emerald-300 text-xs font-medium">
+        查询并看图
+      </button>
+    </div>
+
+    <!-- ==================== 模块 1：全球市场情绪（全中文，含纳斯达克） ==================== -->
     <section id="sec-global" class="space-y-5">
       <div onclick="toggleSection('sec-global')" class="flex items-end justify-between cursor-pointer group select-none">
         <div>
-          <div class="text-[11px] font-bold tracking-[0.18em] text-emerald-400 uppercase mb-1">GLOBAL MARKET SENTIMENT</div>
+          <div class="text-[11px] font-bold tracking-[0.18em] text-emerald-400 uppercase mb-1">全球跨市场情绪矩阵</div>
           <div class="flex items-center gap-2.5">
             <h2 class="text-2xl sm:text-3xl font-bold text-white tracking-tight">全球市场情绪</h2>
             <svg class="chevron-icon w-5 h-5 text-slate-400 transition-transform duration-200" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -97,10 +119,10 @@
             </svg>
           </div>
         </div>
-        <div class="text-xs text-slate-400 font-mono-num">8 项核心资产 · 点击标题栏可折叠</div>
+        <div class="text-xs text-slate-400 font-mono-num">9 项核心市场 · 点击标题可折叠</div>
       </div>
 
-      <div class="section-body grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4" id="grid-global">
+      <div class="section-body grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4" id="grid-global">
         <!-- JS 渲染 -->
       </div>
     </section>
@@ -109,7 +131,7 @@
     <section id="sec-treasury" class="space-y-5">
       <div onclick="toggleSection('sec-treasury')" class="flex items-end justify-between cursor-pointer group select-none">
         <div>
-          <div class="text-[11px] font-bold tracking-[0.18em] text-sky-400 uppercase mb-1">US TREASURY YIELD CURVE</div>
+          <div class="text-[11px] font-bold tracking-[0.18em] text-sky-400 uppercase mb-1">无风险利率与久期锚</div>
           <div class="flex items-center gap-2.5">
             <h2 class="text-2xl sm:text-3xl font-bold text-white tracking-tight">美债长端收益率与期限利差</h2>
             <svg class="chevron-icon w-5 h-5 text-slate-400 transition-transform duration-200" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -117,7 +139,7 @@
             </svg>
           </div>
         </div>
-        <div class="text-xs text-slate-400 font-mono-num">10Y · 20Y · 30Y · 30Y-10Y利差</div>
+        <div class="text-xs text-slate-400 font-mono-num">10年期 · 20年期 · 30年期 · 期限利差</div>
       </div>
 
       <div class="section-body grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4" id="grid-treasury">
@@ -125,48 +147,29 @@
       </div>
     </section>
 
-    <!-- ==================== 模块 3：大型科技公司（七姐妹 + TSM） ==================== -->
-    <section id="sec-megacap" class="space-y-5">
-      <div onclick="toggleSection('sec-megacap')" class="flex items-end justify-between cursor-pointer group select-none">
-        <div>
-          <div class="text-[11px] font-bold tracking-[0.18em] text-emerald-400 uppercase mb-1">MEGA-CAP COMPANIES</div>
-          <div class="flex items-center gap-2.5">
-            <h2 class="text-2xl sm:text-3xl font-bold text-white tracking-tight">大型科技公司（七姐妹 + TSM）</h2>
-            <svg class="chevron-icon w-5 h-5 text-slate-400 transition-transform duration-200" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-            </svg>
-          </div>
-        </div>
-        <div class="text-xs text-slate-400 font-mono-num">8 项指标 · 52周价格区间位置</div>
-      </div>
-
-      <div class="section-body grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4" id="grid-megacap">
-        <!-- JS 渲染 -->
-      </div>
-    </section>
-
-    <!-- ==================== 模块 4：半导体传导链（费半 SOX → 海力士/三星 → 光模块/ASIC） ==================== -->
+    <!-- ==================== 模块 3：半导体、算力与核心软件全产业链监控 ==================== -->
     <section id="sec-semi" class="space-y-5">
       <div onclick="toggleSection('sec-semi')" class="flex items-end justify-between cursor-pointer group select-none">
         <div>
-          <div class="text-[11px] font-bold tracking-[0.18em] text-amber-400 uppercase mb-1">SEMICONDUCTOR & AI SUPPLY CHAIN</div>
+          <div class="text-[11px] font-bold tracking-[0.18em] text-amber-400 uppercase mb-1">全产业链核心标的位置（52周区间分）</div>
           <div class="flex items-center gap-2.5">
-            <h2 class="text-2xl sm:text-3xl font-bold text-white tracking-tight">半导体与存储传导链（美股看费半 · 费半看韩系双雄）</h2>
+            <h2 class="text-2xl sm:text-3xl font-bold text-white tracking-tight">半导体传导链、算力芯片与核心云软件</h2>
             <svg class="chevron-icon w-5 h-5 text-slate-400 transition-transform duration-200" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
             </svg>
           </div>
         </div>
-        <div class="text-xs text-slate-400 font-mono-num">SOX · KOSPI200 · 海力士 · 三星 · 光模块</div>
+        <div class="text-xs text-slate-400 font-mono-num">美股看费半 · 费半看海力士与三星</div>
       </div>
 
       <div class="section-body space-y-6">
         <!-- 分类过滤标签 -->
         <div class="flex flex-wrap gap-2" id="semiFilterTabs">
-          <button data-cat="all" class="semi-tab active px-3.5 py-1.5 rounded-lg text-xs font-medium bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">全部核心标的 (12)</button>
-          <button data-cat="index-memory" class="semi-tab px-3.5 py-1.5 rounded-lg text-xs font-medium bg-white/[0.04] text-slate-300 border border-white/[0.08] hover:bg-white/[0.08]">费半 & 韩系存储先导 (SOX/海力士/三星/MU)</button>
-          <button data-cat="asic" class="semi-tab px-3.5 py-1.5 rounded-lg text-xs font-medium bg-white/[0.04] text-slate-300 border border-white/[0.08] hover:bg-white/[0.08]">AI 算力与定制 ASIC (AVGO/MRVL/AMD/ARM)</button>
-          <button data-cat="optical-power" class="semi-tab px-3.5 py-1.5 rounded-lg text-xs font-medium bg-white/[0.04] text-slate-300 border border-white/[0.08] hover:bg-white/[0.08]">光互连与 800V 功率 (COHR/LITE/VRT/WOLF)</button>
+          <button data-cat="all" class="semi-tab active px-3.5 py-1.5 rounded-lg text-xs font-medium bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">全部核心池</button>
+          <button data-cat="index-memory" class="semi-tab px-3.5 py-1.5 rounded-lg text-xs font-medium bg-white/[0.04] text-slate-300 border border-white/[0.08] hover:bg-white/[0.08]">费半 & 存储先导（费半/海力士/三星/美光）</button>
+          <button data-cat="compute-foundry" class="semi-tab px-3.5 py-1.5 rounded-lg text-xs font-medium bg-white/[0.04] text-slate-300 border border-white/[0.08] hover:bg-white/[0.08]">算力芯片、定制ASIC与代工（NVDA/AVGO/MRVL/AMD/INTC/TSM/ASML）</button>
+          <button data-cat="software-cloud" class="semi-tab px-3.5 py-1.5 rounded-lg text-xs font-medium bg-white/[0.04] text-slate-300 border border-white/[0.08] hover:bg-white/[0.08]">AI 云基建与核心软件（ORCL/MSFT/GOOGL/PLTR/CRM）</button>
+          <button data-cat="custom" id="customTabBtn" class="semi-tab px-3.5 py-1.5 rounded-lg text-xs font-medium bg-white/[0.04] text-slate-300 border border-white/[0.08] hover:bg-white/[0.08]">我的自选查询池 (0)</button>
         </div>
 
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4" id="grid-semi">
@@ -175,27 +178,48 @@
       </div>
     </section>
 
-    <!-- ==================== 模块 5：交互式实时 K 线联动看盘（可折叠，默认收起省空间） ==================== -->
-    <section id="sec-chart" class="section-collapsed space-y-5">
+    <!-- ==================== 模块 4：自定义代码实时看盘终端（支持任意代码 & API 扩展） ==================== -->
+    <section id="sec-chart" class="space-y-5">
       <div onclick="toggleSection('sec-chart')" class="flex items-end justify-between cursor-pointer group select-none">
         <div>
-          <div class="text-[11px] font-bold tracking-[0.18em] text-purple-400 uppercase mb-1">INTERACTIVE TERMINAL</div>
+          <div class="text-[11px] font-bold tracking-[0.18em] text-purple-400 uppercase mb-1">交互式看盘与自定义代码查询终端</div>
           <div class="flex items-center gap-2.5">
-            <h2 class="text-xl sm:text-2xl font-bold text-white tracking-tight">实时分时与 K 线联动图表（点击上方任意卡片自动切换）</h2>
+            <h2 class="text-xl sm:text-2xl font-bold text-white tracking-tight">实时 K 线与自定义标的查询</h2>
             <svg class="chevron-icon w-5 h-5 text-slate-400 transition-transform duration-200" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
             </svg>
           </div>
         </div>
-        <div class="text-xs text-emerald-400 font-mono-num" id="activeChartLabel">当前标的：NASDAQ:NVDA</div>
+        <div class="text-xs text-emerald-400 font-mono-num" id="activeChartLabel">当前标的：费城半导体指数 (NASDAQ:SOX)</div>
       </div>
 
-      <div class="section-body rounded-2xl border border-white/[0.08] bg-[#0d1322] overflow-hidden">
-        <div id="tvChartContainer" class="w-full h-[460px]"></div>
+      <div class="section-body space-y-4">
+        <!-- 终端内置快捷查询与加入自选栏 -->
+        <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 p-3.5 rounded-xl bg-[#0d1322] border border-white/[0.08]">
+          <div class="flex flex-wrap items-center gap-2">
+            <span class="text-xs text-slate-400">手动查代码：</span>
+            <input id="terminalSymbolInput" type="text" placeholder="如 NASDAQ:NVDA, NYSE:ORCL, KRX:000660" 
+              onkeydown="if(event.key==='Enter') handleTerminalSearch()"
+              class="px-3 py-1.5 rounded-lg bg-black/40 border border-white/[0.1] text-xs text-white font-mono-num uppercase focus:outline-none focus:border-emerald-500 w-64" />
+            <button onclick="handleTerminalSearch()" class="px-3 py-1.5 rounded-lg bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-500/40 text-xs font-medium text-emerald-300 transition">
+              加载图表
+            </button>
+            <button onclick="addCurrentToCustomPool()" class="px-3 py-1.5 rounded-lg bg-sky-500/15 hover:bg-sky-500/25 border border-sky-500/30 text-xs font-medium text-sky-300 transition">
+              + 加入自选仪表盘
+            </button>
+          </div>
+          <div class="text-[11px] text-slate-400 font-mono-num" id="apiStatusBadge">
+            数据源模式：内置基准 + 免费公开接口（可在右上角接入私有 API）
+          </div>
+        </div>
+
+        <div class="rounded-2xl border border-white/[0.08] bg-[#0d1322] overflow-hidden">
+          <div id="tvChartContainer" class="w-full h-[480px]"></div>
+        </div>
       </div>
     </section>
 
-    <!-- ==================== 底部阅读方法说明（复刻同款“同一把尺，不同的含义”） ==================== -->
+    <!-- ==================== 底部阅读方法说明 ==================== -->
     <footer class="rounded-2xl border border-white/[0.06] bg-[#0b101d] p-6 sm:p-10 space-y-8">
       <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
         <div>
@@ -203,11 +227,10 @@
           <h3 class="text-2xl sm:text-4xl font-bold text-white tracking-tight">同一把尺，不同的含义</h3>
         </div>
         <p class="text-sm text-slate-400 max-w-md leading-relaxed">
-          市场卡片的分数越高，代表来源指数或反向波动率越偏乐观；美债与公司卡片的分数越高，只代表当前收益率或股价越接近 52 周高点。
+          市场卡片的分数越高，代表情绪或反向波动率越偏乐观；美债与公司卡片的分数越高，只代表当前收益率或股价越接近 52 周高点。
         </p>
       </div>
 
-      <!-- 0 - 100 渐变标尺 -->
       <div class="space-y-2.5">
         <div class="h-1.5 w-full rounded-full ruler-gradient"></div>
         <div class="grid grid-cols-5 text-xs font-mono-num text-slate-400">
@@ -234,42 +257,78 @@
         </div>
       </div>
 
-      <!-- 三栏说明 -->
       <div class="grid grid-cols-1 md:grid-cols-3 gap-6 pt-4 border-t border-white/[0.06]">
         <div class="space-y-1.5">
           <div class="text-xs font-mono-num font-bold text-emerald-400">01</div>
-          <div class="text-sm font-bold text-white">原生情绪指数</div>
+          <div class="text-sm font-bold text-white">原生情绪与反向波动率</div>
           <p class="text-xs text-slate-400 leading-relaxed">
-            加密直接接入 Alternative.me 实时接口，美股沿用 CNN 恐慌与贪婪指数分数及评级（同步参考高盛 Vol Panic 读数）。
+            美股与纳斯达克结合恐慌指标与波动率映射，加密直连 Alternative.me 实时接口，欧/印/日/港及黄金原油由隐含波动率反向映射到 0–100 标尺。
           </p>
         </div>
         <div class="space-y-1.5">
           <div class="text-xs font-mono-num font-bold text-emerald-400">02</div>
-          <div class="text-sm font-bold text-white">反向波动率映射</div>
+          <div class="text-sm font-bold text-white">半导体与云软件传导链</div>
           <p class="text-xs text-slate-400 leading-relaxed">
-            欧洲、印度、日本、港股、黄金与原油将隐含/实现波动率反向映射到 0–100 情绪尺，原始点位与涨跌幅同步展示。
+            紧盯“美股看费半，费半看海力士与三星”的先导规律，覆盖晶圆代工、定制 ASIC、x86/GPU 算力及甲骨文等核心云基础设施软件。
           </p>
         </div>
         <div class="space-y-1.5">
           <div class="text-xs font-mono-num font-bold text-emerald-400">03</div>
-          <div class="text-sm font-bold text-white">52 周位置 & 产业链传导</div>
+          <div class="text-sm font-bold text-white">开放 API 扩展架构</div>
           <p class="text-xs text-slate-400 leading-relaxed">
-            公司、美债与半导体卡片展示当前值在 52 周高低点中的相对分位（0–100），重点跟踪费半（SOX）与海力士/三星的先导联动，不构成买卖信号。
+            支持手动输入任意代码即时看盘并加入本地自选池，同时支持在顶部“API 接入”中绑定 Finnhub、TwelveData 或自定义行情接口实现自动轮询。
           </p>
         </div>
-      </div>
-
-      <div class="pt-4 border-t border-white/[0.06] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 text-[11px] text-slate-500">
-        <div>数据链路：实时接入 Alternative.me / CNN / Yahoo Finance 公开行情源，每 5 分钟自动轮询刷新。</div>
-        <div>仅供跨市场情绪与产业链观察，不构成投资或交易建议。</div>
       </div>
     </footer>
   </main>
 
+  <!-- ==================== API 扩展配置弹窗 ==================== -->
+  <div id="apiModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/75 backdrop-blur-sm p-4">
+    <div class="w-full max-w-lg rounded-2xl bg-[#0d1322] border border-white/[0.12] p-6 space-y-5 shadow-2xl">
+      <div class="flex items-center justify-between">
+        <div>
+          <h3 class="text-lg font-bold text-white">外部实时行情 API 接口配置</h3>
+          <p class="text-xs text-slate-400 mt-0.5">配置后将自动每 5 分钟轮询更新个股现价、涨跌幅与 52 周区间分</p>
+        </div>
+        <button onclick="closeApiModal()" class="text-slate-400 hover:text-white text-lg">✕</button>
+      </div>
+
+      <div class="space-y-4">
+        <div>
+          <label class="block text-xs font-medium text-slate-300 mb-1.5">选择接口服务商</label>
+          <select id="apiProviderSelect" class="w-full px-3 py-2 rounded-lg bg-black/40 border border-white/[0.1] text-xs text-white focus:outline-none focus:border-emerald-500">
+            <option value="none">默认模式（免费加密接口 + 基准快照 + TradingView实时图）</option>
+            <option value="finnhub">Finnhub 实时美股接口（推荐，免费注册即得 Key）</option>
+            <option value="twelvedata">Twelve Data 全球市场接口（支持美股/港股/韩股/指数）</option>
+            <option value="custom">自定义 REST JSON 代理接口（适配自建后端/Worker）</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block text-xs font-medium text-slate-300 mb-1.5">API Key / Token</label>
+          <input id="apiKeyInput" type="password" placeholder="粘贴你的 API Key（仅保存在当前浏览器本地）" 
+            class="w-full px-3 py-2 rounded-lg bg-black/40 border border-white/[0.1] text-xs text-white font-mono-num focus:outline-none focus:border-emerald-500" />
+        </div>
+
+        <div>
+          <label class="block text-xs font-medium text-slate-300 mb-1.5">自定义接口 URL（仅当选择“自定义 REST JSON”时填写）</label>
+          <input id="customEndpointInput" type="text" placeholder="例如：https://your-worker.workers.dev/quote?symbol={SYMBOL}" 
+            class="w-full px-3 py-2 rounded-lg bg-black/40 border border-white/[0.1] text-xs text-white font-mono-num focus:outline-none focus:border-emerald-500" />
+          <p class="text-[11px] text-slate-500 mt-1">支持返回 JSON 字段：<code class="text-slate-300">{ price, changePercent, high52, low52 }</code></p>
+        </div>
+      </div>
+
+      <div class="flex items-center justify-end gap-2.5 pt-2 border-t border-white/[0.08]">
+        <button onclick="closeApiModal()" class="px-4 py-2 rounded-lg bg-white/[0.05] hover:bg-white/[0.1] text-xs text-slate-300">取消</button>
+        <button onclick="saveApiConfig()" class="px-4 py-2 rounded-lg bg-emerald-500 hover:bg-emerald-600 text-xs font-semibold text-slate-950">保存并立即拉取</button>
+      </div>
+    </div>
+  </div>
+
   <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
   <script>
-    // ==================== 1. 数据模型定义 ====================
-    // 分数颜色与标签映射（严格遵循 0-100 同一把尺）
+    // ==================== 1. 同一把尺（0-100）核心计算引擎 ====================
     function getGaugeStyle(score, mode = 'range') {
       let color = '#eab308';
       let label = mode === 'sentiment' ? '中性' : '区间中位';
@@ -292,17 +351,15 @@
       return { color, label };
     }
 
-    // 生成半圆弧 SVG（与截图完全一致的红-黄-绿渐变弧线 + 白色指示圆点）
     function renderArcSVG(score, scoreColor, uid) {
       const clamped = Math.max(0, Math.min(100, score));
-      // 角度从 180度(左端) 到 0度(右端)
       const angleRad = Math.PI * (1 - clamped / 100);
       const cx = 100, cy = 92, r = 74;
       const dotX = (cx + r * Math.cos(angleRad)).toFixed(2);
       const dotY = (cy - r * Math.sin(angleRad)).toFixed(2);
 
       return `
-        <svg viewBox="0 0 200 112" class="w-full max-w-[210px] mx-auto overflow-visible">
+        <svg viewBox="0 0 200 112" class="w-full max-w-[205px] mx-auto overflow-visible">
           <defs>
             <linearGradient id="grad-${uid}" x1="0%" y1="0%" x2="100%" y2="0%">
               <stop offset="0%" stop-color="#ef4444" />
@@ -311,44 +368,43 @@
               <stop offset="100%" stop-color="#10b981" />
             </linearGradient>
           </defs>
-          <!-- 背景轨道 -->
           <path d="M 26 92 A 74 74 0 0 1 174 92" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="11" stroke-linecap="round" />
-          <!-- 渐变主弧线 -->
           <path d="M 26 92 A 74 74 0 0 1 174 92" fill="none" stroke="url(#grad-${uid})" stroke-width="11" stroke-linecap="round" />
-          <!-- 刻度数字 -->
           <text x="14" y="96" fill="#64748b" font-size="9" font-family="JetBrains Mono">0</text>
           <text x="178" y="96" fill="#64748b" font-size="9" font-family="JetBrains Mono">100</text>
-          <!-- 指示圆点 -->
           <circle cx="${dotX}" cy="${dotY}" r="7.5" fill="#ffffff" stroke="${scoreColor}" stroke-width="3" />
         </svg>
       `;
     }
 
-    // 渲染单张标准卡片
     function buildCardHTML(item, idx, prefix) {
       const uid = `${prefix}-${idx}`;
       const st = getGaugeStyle(item.score, item.mode);
       const changeColor = item.change.startsWith('+') ? 'text-emerald-400' : (item.change.startsWith('-') ? 'text-rose-400' : 'text-slate-300');
+      const removeBtn = item.isCustom
+        ? `<button onclick="event.stopPropagation(); removeCustomSymbol('${item.ticker}')" title="移除自选" class="ml-1 text-slate-500 hover:text-rose-400 text-xs">✕</button>`
+        : '';
 
       return `
-        <div onclick="openSymbolChart('${item.tvSymbol}', '${item.code} · ${item.name}')" class="gauge-card rounded-2xl p-4 sm:p-5 flex flex-col justify-between cursor-pointer">
-          <!-- 卡片头部 -->
+        <div onclick="openSymbolChart('${item.tvSymbol}', '${item.title}')" class="gauge-card rounded-2xl p-4 sm:p-5 flex flex-col justify-between cursor-pointer">
           <div class="flex items-start justify-between gap-2">
             <div class="flex items-center gap-2.5 min-w-0">
               <div class="w-8 h-8 rounded-lg bg-emerald-500/10 border border-emerald-500/25 flex items-center justify-center text-[11px] font-bold font-mono-num text-emerald-300 shrink-0">
                 ${item.badge}
               </div>
               <div class="min-w-0">
-                <div class="font-bold text-white text-sm sm:text-base truncate">${item.code}</div>
+                <div class="font-bold text-white text-sm sm:text-base truncate">${item.title}</div>
                 <div class="text-[11px] text-slate-400 truncate">${item.subTitle}</div>
               </div>
             </div>
-            <span class="px-2 py-0.5 rounded text-[10px] font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 shrink-0">
-              ${item.tag || '实时'}
-            </span>
+            <div class="flex items-center shrink-0">
+              <span class="px-2 py-0.5 rounded text-[10px] font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                ${item.tag || '实时'}
+              </span>
+              ${removeBtn}
+            </div>
           </div>
 
-          <!-- 半圆仪表盘 -->
           <div class="my-3 relative">
             ${renderArcSVG(item.score, st.color, uid)}
             <div class="text-center -mt-9">
@@ -359,7 +415,6 @@
             </div>
           </div>
 
-          <!-- 状态胶囊与价格区间 -->
           <div class="text-center space-y-2 mt-1">
             <div>
               <span class="inline-block px-3 py-1 rounded-full text-xs font-semibold border" 
@@ -375,10 +430,9 @@
             </div>
           </div>
 
-          <!-- 卡片底部来源与时间戳 -->
           <div class="mt-4 pt-2.5 border-t border-white/[0.05] flex items-center justify-between text-[10px] font-mono-num text-slate-500">
             <span class="truncate max-w-[65%]">${item.source}</span>
-            <span class="card-timestamp">${getFormattedNow()}</span>
+            <span>${getFormattedNow()}</span>
           </div>
         </div>
       `;
@@ -390,71 +444,66 @@
       return `${pad(d.getMonth() + 1)}/${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
     }
 
-    // ==================== 2. 各板块初始与实时映射数据 ====================
+    // ==================== 2. 核心数据源配置（全中文全球情绪 + 精选产业链） ====================
     const globalMarkets = [
-      { badge: 'US', code: 'US EQUITIES', name: '美股情绪 (CNN)', subTitle: '标普500 · CNN原生情绪与Vol Panic', score: 22, mode: 'sentiment', price: 'S&P 5,942', change: '-0.42%', rangeText: 'Vol Panic 9.8/10 · 恐慌极值区', source: 'CNN / GS Desk', tvSymbol: 'FOREXCOM:SPXUSD', tag: '原生' },
-      { badge: 'CR', code: 'CRYPTO', name: '加密货币 (BTC)', subTitle: '比特币 · Alternative.me 实时情绪', score: 68, mode: 'sentiment', price: '$94,280', change: '+1.85%', rangeText: '52周区间 $52,400–$99,500', source: 'Alternative.me', tvSymbol: 'BINANCE:BTCUSDT', tag: '实时接口' },
-      { badge: 'EU', code: 'EUROPE', name: '欧洲股市', subTitle: 'STOXX 50 · 反向波动率映射', score: 46, mode: 'sentiment', price: '4,812 pts', change: '-0.31%', rangeText: 'VSTOXX 18.4 · 波动率中性偏紧', source: 'STOXX / Yahoo', tvSymbol: 'EUREX:FESX1!', tag: '反向波动率' },
-      { badge: 'IN', code: 'INDIA', name: '印度股市', subTitle: 'NIFTY 50 · India VIX 反向映射', score: 54, mode: 'sentiment', price: '24,180 pts', change: '+0.48%', rangeText: 'India VIX 14.8 · 内资承接稳健', source: 'NSE / Yahoo', tvSymbol: 'NSE:NIFTY', tag: '反向波动率' },
-      { badge: 'JP', code: 'JAPAN', name: '日本股市', subTitle: '日经225 / TOPIX · CTA空头回补观察', score: 38, mode: 'sentiment', price: '38,420 pts', change: '-0.85%', rangeText: 'Nikkei VI 24.6 · 央行加息博弈', source: 'TSE / GS Desk', tvSymbol: 'TVC:NI225', tag: '反向波动率' },
-      { badge: 'HK', code: 'HONG KONG', name: '香港股市', subTitle: '恒生指数 / 恒科 · 恒指波幅反向映射', score: 41, mode: 'sentiment', price: '19,450 pts', change: '-0.62%', rangeText: 'VHSI 23.1 · 高股息防御受捧', source: 'HKEX / Yahoo', tvSymbol: 'TVC:HSI', tag: '反向波动率' },
-      { badge: 'AU', code: 'GOLD', name: '现货黄金', subTitle: 'XAU/USD · 黄金波动率GVZ反向映射', score: 74, mode: 'sentiment', price: '$2,658/oz', change: '+0.76%', rangeText: '52周区间 $1,984–$2,790', source: 'COMEX / LBMA', tvSymbol: 'OANDA:XAUUSD', tag: '避险锚' },
-      { badge: 'CL', code: 'CRUDE OIL', name: 'WTI 原油', subTitle: '美原油期货 · OVX波动率反向映射', score: 34, mode: 'sentiment', price: '$68.90/bbl', change: '-1.14%', rangeText: '52周区间 $65.2–$87.6', source: 'NYMEX / Yahoo', tvSymbol: 'TVC:USOIL', tag: '通胀锚' }
+      { badge: '标普', title: '美股大盘情绪', subTitle: '标普500 · 恐慌指数与仓位映射', score: 22, mode: 'sentiment', price: '5,942 点', change: '-0.42%', rangeText: '波动率恐慌读数 9.8/10 · 极度恐慌区', source: 'CNN / 高盛交易台', tvSymbol: 'FOREXCOM:SPXUSD', tag: '原生情绪' },
+      { badge: '纳指', title: '纳斯达克科技情绪', subTitle: '纳斯达克100 · VXN科技波动率映射', score: 26, mode: 'sentiment', price: '20,680 点', change: '-0.78%', rangeText: 'VXN 21.4 · 科技成长股情绪承压', source: '纳斯达克 / Yahoo', tvSymbol: 'NASDAQ:NDX', tag: '科技风向' },
+      { badge: '加密', title: '加密货币情绪', subTitle: '比特币 · Alternative.me 实时指数', score: 68, mode: 'sentiment', price: '$94,280', change: '+1.85%', rangeText: '52周区间 $52,400–$99,500', source: 'Alternative.me 实时', tvSymbol: 'BINANCE:BTCUSDT', tag: '实时接口' },
+      { badge: '欧洲', title: '欧洲股市情绪', subTitle: '欧洲斯托克50 · 反向波动率映射', score: 46, mode: 'sentiment', price: '4,812 点', change: '-0.31%', rangeText: '欧元区波动率 18.4 · 情绪中性偏紧', source: 'STOXX / Yahoo', tvSymbol: 'EUREX:FESX1!', tag: '反向波动率' },
+      { badge: '印度', title: '印度股市情绪', subTitle: '印度NIFTY50 · 印度VIX反向映射', score: 54, mode: 'sentiment', price: '24,180 点', change: '+0.48%', rangeText: '印度波动率 14.8 · 内资承接稳健', source: 'NSE / Yahoo', tvSymbol: 'NSE:NIFTY', tag: '反向波动率' },
+      { badge: '日本', title: '日本股市情绪', subTitle: '日经225 · 日经波动率反向映射', score: 38, mode: 'sentiment', price: '38,420 点', change: '-0.85%', rangeText: '日经波幅 24.6 · 日央行加息预期博弈', source: '东证所 / 高盛', tvSymbol: 'TVC:NI225', tag: '反向波动率' },
+      { badge: '港股', title: '香港股市情绪', subTitle: '恒生指数 · 恒指波幅反向映射', score: 41, mode: 'sentiment', price: '19,450 点', change: '-0.62%', rangeText: '恒指波幅 23.1 · 高股息防御受关注', source: '港交所 / Yahoo', tvSymbol: 'TVC:HSI', tag: '反向波动率' },
+      { badge: '黄金', title: '现货黄金情绪', subTitle: '伦敦金 · 黄金波动率GVZ反向映射', score: 74, mode: 'sentiment', price: '$2,658/盎司', change: '+0.76%', rangeText: '52周区间 $1,984–$2,790', source: 'COMEX / LBMA', tvSymbol: 'OANDA:XAUUSD', tag: '避险锚' },
+      { badge: '原油', title: '国际原油情绪', subTitle: 'WTI美原油 · 原油波动率反向映射', score: 34, mode: 'sentiment', price: '$68.90/桶', change: '-1.14%', rangeText: '52周区间 $65.2–$87.6', source: 'NYMEX / Yahoo', tvSymbol: 'TVC:USOIL', tag: '通胀锚' }
     ];
 
     const treasuryCurve = [
-      { badge: '10Y', code: 'US 10Y YIELD', name: '10年期美债收益率', subTitle: '全球资产定价之锚 · 52周分位', score: 72, mode: 'range', price: '4.42%', change: '+4.5 bps', rangeText: '52周区间 3.62%–4.74%', source: 'US Treasury / FRED', tvSymbol: 'TVC:US10Y', tag: '核心锚' },
-      { badge: '20Y', code: 'US 20Y YIELD', name: '20年期美债收益率', subTitle: '长久期国债利率 · 52周分位', score: 75, mode: 'range', price: '4.69%', change: '+4.1 bps', rangeText: '52周区间 3.98%–4.98%', source: 'US Treasury / FRED', tvSymbol: 'TVC:US20Y', tag: '长端利率' },
-      { badge: '30Y', code: 'US 30Y YIELD', name: '30年期美债收益率', subTitle: '超长端通胀预期 · 52周分位', score: 74, mode: 'range', price: '4.61%', change: '+3.8 bps', rangeText: '52周区间 3.94%–4.91%', source: 'US Treasury / FRED', tvSymbol: 'TVC:US30Y', tag: '超长端' },
-      { badge: 'SP', code: '30Y - 10Y SPREAD', name: '美债 30Y-10Y 期限利差', subTitle: '曲线陡峭化程度 · 52周分位', score: 58, mode: 'range', price: '+19 bps', change: '-0.7 bps', rangeText: '52周区间 -5 bps ~ +36 bps', source: 'Yield Curve Calc', tvSymbol: 'TVC:US30Y-TVC:US10Y', tag: '曲线形态' }
+      { badge: '10年', title: '10年期美债收益率', subTitle: '全球资产定价之锚 · 52周分位', score: 72, mode: 'range', price: '4.42%', change: '+4.5 bps', rangeText: '52周区间 3.62%–4.74%', source: '美国财政部 / FRED', tvSymbol: 'TVC:US10Y', tag: '核心定价锚' },
+      { badge: '20年', title: '20年期美债收益率', subTitle: '长久期国债利率 · 52周分位', score: 75, mode: 'range', price: '4.69%', change: '+4.1 bps', rangeText: '52周区间 3.98%–4.98%', source: '美国财政部 / FRED', tvSymbol: 'TVC:US20Y', tag: '长端利率' },
+      { badge: '30年', title: '30年期美债收益率', subTitle: '超长端通胀预期 · 52周分位', score: 74, mode: 'range', price: '4.61%', change: '+3.8 bps', rangeText: '52周区间 3.94%–4.91%', source: '美国财政部 / FRED', tvSymbol: 'TVC:US30Y', tag: '超长端' },
+      { badge: '利差', title: '美债 30Y–10Y 利差', subTitle: '收益率曲线斜率 · 52周分位', score: 58, mode: 'range', price: '+19 bps', change: '-0.7 bps', rangeText: '52周区间 -5 bps ~ +36 bps', source: '曲线实时计算', tvSymbol: 'TVC:US30Y-TVC:US10Y', tag: '曲线形态' }
     ];
 
-    const megaCapCompanies = [
-      { badge: 'AA', code: 'AAPL', name: '苹果', subTitle: '苹果 · 52 周价格区间位置', score: 96, mode: 'range', price: '$355.58', change: '+0.43%', rangeText: '52 周区间 $243–$361', source: 'Yahoo / Finance', tvSymbol: 'NASDAQ:AAPL', tag: '实时' },
-      { badge: 'MS', code: 'MSFT', name: '微软', subTitle: '微软 · 52 周价格区间位置', score: 67, mode: 'range', price: '$489.93', change: '-1.25%', rangeText: '52 周区间 $349–$559', source: 'Yahoo / Finance', tvSymbol: 'NASDAQ:MSFT', tag: '实时' },
-      { badge: 'NV', code: 'NVDA', name: '英伟达', subTitle: '英伟达 · 52 周价格区间位置', score: 21, mode: 'range', price: '$149.30', change: '-3.91%', rangeText: '52 周区间 $125–$243', source: 'Yahoo / Finance', tvSymbol: 'NASDAQ:NVDA', tag: '实时' },
-      { badge: 'GO', code: 'GOOGL', name: '谷歌', subTitle: '谷歌 · 52 周价格区间位置', score: 7, mode: 'range', price: '$273.10', change: '-2.13%', rangeText: '52 周区间 $263–$409', source: 'Yahoo / Finance', tvSymbol: 'NASDAQ:GOOGL', tag: '实时' },
-      { badge: 'AM', code: 'AMZN', name: '亚马逊', subTitle: '亚马逊 · 52 周价格区间位置', score: 53, mode: 'range', price: '$244.43', change: '-3.12%', rangeText: '52 周区间 $196–$287', source: 'Yahoo / Finance', tvSymbol: 'NASDAQ:AMZN', tag: '实时' },
-      { badge: 'ME', code: 'META', name: 'Meta', subTitle: 'Meta · 52 周价格区间位置', score: 35, mode: 'range', price: '$609.89', change: '+3.40%', rangeText: '52 周区间 $520–$780', source: 'Yahoo / Finance', tvSymbol: 'NASDAQ:META', tag: '实时' },
-      { badge: 'TS', code: 'TSLA', name: '特斯拉', subTitle: '特斯拉 · 52 周价格区间位置', score: 41, mode: 'range', price: '$380.14', change: '-1.18%', rangeText: '52 周区间 $297–$499', source: 'Yahoo / Finance', tvSymbol: 'NASDAQ:TSLA', tag: '实时' },
-      { badge: 'TS', code: 'TSM', name: '台积电', subTitle: '台积电 · 52 周价格区间位置', score: 32, mode: 'range', price: '$342.34', change: '-1.96%', rangeText: '52 周区间 $275–$487', source: 'Yahoo / Finance', tvSymbol: 'NYSE:TSM', tag: '实时' }
+    const coreSupplyChain = [
+      // 1. 费半 & 韩系存储先导（纯中文展示海力士与三星）
+      { cat: 'index-memory', ticker: 'SOX', badge: '费半', title: '费城半导体指数', subTitle: '美股芯片总风向标 · 52周区间', score: 44, mode: 'range', price: '4,985.20', change: '-1.64%', rangeText: '52周区间 4,120–5,930', source: '费城交易所', tvSymbol: 'NASDAQ:SOX', tag: '芯片总纲' },
+      { cat: 'index-memory', ticker: 'HYNIX', badge: '海力士', title: 'SK海力士', subTitle: 'HBM存储绝对龙头 · 费半先行指标', score: 48, mode: 'range', price: '₩176,400', change: '-2.10%', rangeText: '52周区间 ₩141,000–₩241,000', source: '韩国交易所', tvSymbol: 'KRX:000660', tag: 'HBM先导' },
+      { cat: 'index-memory', ticker: 'SAMSUNG', badge: '三星', title: '三星电子', subTitle: '全球存储与晶圆巨头 · 周期风向标', score: 18, mode: 'range', price: '₩56,200', change: '-1.40%', rangeText: '52周区间 ₩49,900–₩88,800', source: '韩国交易所', tvSymbol: 'KRX:005930', tag: '存储周期' },
+      { cat: 'index-memory', ticker: 'MU', badge: '美光', title: '美光科技 (MU)', subTitle: '美股HBM与DRAM核心 · 52周区间', score: 36, mode: 'range', price: '$102.45', change: '-2.35%', rangeText: '52周区间 $84.1–$157.5', source: 'NASDAQ', tvSymbol: 'NASDAQ:MU', tag: '美股存储' },
+
+      // 2. 算力芯片、定制ASIC与晶圆代工（含 INTC、NVDA、AVGO、MRVL、AMD、TSM、ASML）
+      { cat: 'compute-foundry', ticker: 'NVDA', badge: 'NVDA', title: '英伟达', subTitle: 'AI 算力GPU绝对核心 · 52周区间', score: 21, mode: 'range', price: '$149.30', change: '-3.91%', rangeText: '52周区间 $125–$243', source: 'NASDAQ', tvSymbol: 'NASDAQ:NVDA', tag: 'GPU龙头' },
+      { cat: 'compute-foundry', ticker: 'TSM', badge: 'TSM', title: '台积电', subTitle: '先进制程与CoWoS封装垄断 · 52周区间', score: 32, mode: 'range', price: '$342.34', change: '-1.96%', rangeText: '52周区间 $275–$487', source: 'NYSE', tvSymbol: 'NYSE:TSM', tag: '先进代工' },
+      { cat: 'compute-foundry', ticker: 'AVGO', badge: 'AVGO', title: '博通', subTitle: '定制AI芯片(ASIC)与高速交换龙头', score: 62, mode: 'range', price: '$168.90', change: '-0.88%', rangeText: '52周区间 $118.0–$186.4', source: 'NASDAQ', tvSymbol: 'NASDAQ:AVGO', tag: 'ASIC龙头' },
+      { cat: 'compute-foundry', ticker: 'MRVL', badge: 'MRVL', title: '迈威尔科技', subTitle: '定制ASIC与高速光通信DSP核心', score: 71, mode: 'range', price: '$91.20', change: '+1.12%', rangeText: '52周区间 $53.2–$99.8', source: 'NASDAQ', tvSymbol: 'NASDAQ:MRVL', tag: 'ASIC/DSP' },
+      { cat: 'compute-foundry', ticker: 'AMD', badge: 'AMD', title: '超威半导体', subTitle: '数据中心GPU第二极与服务器CPU', score: 29, mode: 'range', price: '$138.60', change: '-1.75%', rangeText: '52周区间 $121.8–$227.3', source: 'NASDAQ', tvSymbol: 'NASDAQ:AMD', tag: '算力双雄' },
+      { cat: 'compute-foundry', ticker: 'INTC', badge: 'INTC', title: '英特尔', subTitle: 'x86服务器与美国本土晶圆代工', score: 19, mode: 'range', price: '$23.40', change: '-1.26%', rangeText: '52周区间 $18.5–$51.2', source: 'NASDAQ', tvSymbol: 'NASDAQ:INTC', tag: '代工转型' },
+      { cat: 'compute-foundry', ticker: 'ASML', badge: 'ASML', title: '阿斯麦', subTitle: 'EUV光刻机唯一供应商 · 设备总锚', score: 24, mode: 'range', price: '$688.50', change: '-1.15%', rangeText: '52周区间 $645.0–$1,110', source: 'NASDAQ', tvSymbol: 'NASDAQ:ASML', tag: '光刻设备' },
+
+      // 3. AI 云基建与核心软件（补齐甲骨文 ORCL 等核心软件与云）
+      { cat: 'software-cloud', ticker: 'ORCL', badge: 'ORCL', title: '甲骨文 (Oracle)', subTitle: 'AI 算力云基建(OCI)与企业数据库龙头', score: 78, mode: 'range', price: '$184.20', change: '+1.45%', rangeText: '52周区间 $99.3–$198.3', source: 'NYSE', tvSymbol: 'NYSE:ORCL', tag: 'AI云/数据库' },
+      { cat: 'software-cloud', ticker: 'MSFT', badge: 'MSFT', title: '微软', subTitle: 'Azure 云基础设施与企业级AI软件核心', score: 67, mode: 'range', price: '$489.93', change: '-1.25%', rangeText: '52周区间 $349–$559', source: 'NASDAQ', tvSymbol: 'NASDAQ:MSFT', tag: '云与软件' },
+      { cat: 'software-cloud', ticker: 'GOOGL', badge: 'GOOGL', title: '谷歌', subTitle: 'TPU自研算力与GCP云基建 · 52周区间', score: 28, mode: 'range', price: '$176.40', change: '-1.80%', rangeText: '52周区间 $130.6–$207.0', source: 'NASDAQ', tvSymbol: 'NASDAQ:GOOGL', tag: 'TPU/云基建' },
+      { cat: 'software-cloud', ticker: 'PLTR', badge: 'PLTR', title: 'Palantir', subTitle: '企业级与国防AI操作系统软件龙头', score: 89, mode: 'range', price: '$64.80', change: '+2.60%', rangeText: '52周区间 $15.6–$67.9', source: 'NYSE', tvSymbol: 'NYSE:PLTR', tag: 'AI软件龙头' },
+      { cat: 'software-cloud', ticker: 'CRM', badge: 'CRM', title: '赛富时 (Salesforce)', subTitle: '企业CRM与AI智能体(Agentforce)核心', score: 76, mode: 'range', price: '$338.50', change: '+0.92%', rangeText: '52周区间 $212.0–$348.8', source: 'NYSE', tvSymbol: 'NYSE:CRM', tag: '企业SaaS' }
     ];
 
-    const semiSupplyChain = [
-      // 费半与韩系存储先导
-      { cat: 'index-memory', badge: 'SOX', code: 'SOX 费城半导体', name: '费城半导体指数', subTitle: '美股芯片总风向标 · 52周区间', score: 44, mode: 'range', price: '4,985.20', change: '-1.64%', rangeText: '52 周区间 4,120–5,930', source: 'PHLX / Nasdaq', tvSymbol: 'NASDAQ:SOX', tag: '核心基准' },
-      { cat: 'index-memory', badge: 'KR', code: '000660 SK海力士', name: 'SK Hynix (HBM龙头)', subTitle: '费半先行指标 · 韩国KRX 52周区间', score: 48, mode: 'range', price: '₩176,400', change: '-2.10%', rangeText: '52 周区间 ₩141,000–₩241,000', source: 'KRX / Seoul', tvSymbol: 'KRX:000660', tag: 'HBM先导' },
-      { cat: 'index-memory', badge: 'KR', code: '005930 三星电子', name: 'Samsung Electronics', subTitle: '韩股权重核心 · 韩国KRX 52周区间', score: 18, mode: 'range', price: '₩56,200', change: '-1.40%', rangeText: '52 周区间 ₩49,900–₩88,800', source: 'KRX / Seoul', tvSymbol: 'KRX:005930', tag: '存储周期' },
-      { cat: 'index-memory', badge: 'MU', code: 'MU 美光科技', name: 'Micron Technology', subTitle: '美股HBM/DRAM映射 · 52周区间', score: 36, mode: 'range', price: '$102.45', change: '-2.35%', rangeText: '52 周区间 $84.1–$157.5', source: 'NASDAQ / Yahoo', tvSymbol: 'NASDAQ:MU', tag: '美股存储' },
-
-      // AI 算力与定制 ASIC
-      { cat: 'asic', badge: 'AV', code: 'AVGO 博通', name: 'Broadcom (ASIC/网络)', subTitle: '定制AI芯片双雄 · 52周区间', score: 62, mode: 'range', price: '$168.90', change: '-0.88%', rangeText: '52 周区间 $118.0–$186.4', source: 'NASDAQ / Yahoo', tvSymbol: 'NASDAQ:AVGO', tag: 'ASIC龙头' },
-      { cat: 'asic', badge: 'MR', code: 'MRVL 迈威尔', name: 'Marvell Technology', subTitle: '定制ASIC与DSP · 52周区间', score: 71, mode: 'range', price: '$91.20', change: '+1.12%', rangeText: '52 周区间 $53.2–$99.8', source: 'NASDAQ / Yahoo', tvSymbol: 'NASDAQ:MRVL', tag: 'ASIC/光DSP' },
-      { cat: 'asic', badge: 'AM', code: 'AMD 超威半导体', name: 'AMD (MI300/服务器)', subTitle: 'GPU第二极 · 52周区间', score: 29, mode: 'range', price: '$138.60', change: '-1.75%', rangeText: '52 周区间 $121.8–$227.3', source: 'NASDAQ / Yahoo', tvSymbol: 'NASDAQ:AMD', tag: '算力芯片' },
-      { cat: 'asic', badge: 'AS', code: 'ASML 阿斯麦', name: 'ASML Holding', subTitle: 'EUV光刻机垄断 · 52周区间', score: 24, mode: 'range', price: '$688.50', change: '-1.15%', rangeText: '52 周区间 $645.0–$1,110', source: 'NASDAQ / Yahoo', tvSymbol: 'NASDAQ:ASML', tag: '上游设备' },
-
-      // 光互连与 800V 供电散热
-      { cat: 'optical-power', badge: 'CO', code: 'COHR 高意', name: 'Coherent (800G/1.6T)', subTitle: '光模块与激光器 · 52周区间', score: 82, mode: 'range', price: '$101.40', change: '+1.95%', rangeText: '52 周区间 $44.5–$112.0', source: 'NYSE / Yahoo', tvSymbol: 'NYSE:COHR', tag: '光互连' },
-      { cat: 'optical-power', badge: 'LI', code: 'LITE 鲁门特姆', name: 'Lumentum Holdings', subTitle: 'EML光芯片核心 · 52周区间', score: 79, mode: 'range', price: '$86.30', change: '+2.40%', rangeText: '52 周区间 $41.2–$96.5', source: 'NASDAQ / Yahoo', tvSymbol: 'NASDAQ:LITE', tag: '光芯片' },
-      { cat: 'optical-power', badge: 'VR', code: 'VRT 维谛技术', name: 'Vertiv Holdings', subTitle: '液冷与800V数据中心供电 · 52周', score: 85, mode: 'range', price: '$124.80', change: '+0.65%', rangeText: '52 周区间 $46.8–$138.9', source: 'NYSE / Yahoo', tvSymbol: 'NYSE:VRT', tag: '液冷/供电' },
-      { cat: 'optical-power', badge: 'WF', code: 'WOLF 碳化硅', name: 'Wolfspeed (SiC功率)', subTitle: '800V宽禁带半导体 · 52周区间', score: 15, mode: 'range', price: '$11.85', change: '-3.10%', rangeText: '52 周区间 $7.80–$35.4', source: 'NYSE / Yahoo', tvSymbol: 'NYSE:WOLF', tag: 'SiC材料' }
-    ];
-
-    // ==================== 3. 实时接口拉取与渲染逻辑 ====================
+    // 本地自选扩展池（支持手动输入任意代码保存）
+    let customSymbols = JSON.parse(localStorage.getItem('james_custom_symbols') || '[]');
     let currentSemiCat = 'all';
+    let currentChartSymbol = 'NASDAQ:SOX';
+    let currentChartTitle = '费城半导体指数 (NASDAQ:SOX)';
 
+    // ==================== 3. 实时接口拉取引擎（内置 + 自定义 API 扩展） ====================
     async function fetchLiveCryptoFearGreed() {
       try {
         const res = await fetch('https://api.alternative.me/fng/?limit=1');
         const json = await res.json();
         if (json && json.data && json.data[0]) {
-          const val = parseInt(json.data[0].value, 10);
-          globalMarkets[1].score = val;
-          globalMarkets[1].rangeText = `实时情绪评级: ${json.data[0].value_classification} · Alternative.me`;
+          globalMarkets[2].score = parseInt(json.data[0].value, 10);
+          globalMarkets[2].rangeText = `实时情绪评级: ${json.data[0].value_classification} · Alternative.me`;
         }
-      } catch (e) {
-        console.warn('Alternative.me 接口暂不可达，使用快照基准值', e);
-      }
+      } catch (e) {}
     }
 
     async function fetchLiveBTCSpot() {
@@ -464,26 +513,98 @@
         if (data && data.lastPrice) {
           const price = parseFloat(data.lastPrice).toLocaleString('en-US', { maximumFractionDigits: 0 });
           const pct = parseFloat(data.priceChangePercent);
-          globalMarkets[1].price = `$${price}`;
-          globalMarkets[1].change = `${pct >= 0 ? '+' : ''}${pct.toFixed(2)}%`;
+          globalMarkets[2].price = `$${price}`;
+          globalMarkets[2].change = `${pct >= 0 ? '+' : ''}${pct.toFixed(2)}%`;
         }
-      } catch (e) {
-        console.warn('Binance 行情接口暂不可达，保留默认显示', e);
+      } catch (e) {}
+    }
+
+    // 外部实时股票 API 拉取器（支持 Finnhub / TwelveData / 自定义代理）
+    async function fetchExternalQuotesIfConfigured() {
+      const provider = localStorage.getItem('james_api_provider') || 'none';
+      const apiKey = localStorage.getItem('james_api_key') || '';
+      const customUrl = localStorage.getItem('james_api_url') || '';
+
+      if (provider === 'none' || (!apiKey && provider !== 'custom')) return;
+
+      const allTargets = [...coreSupplyChain, ...customSymbols];
+      for (const item of allTargets) {
+        if (!item.ticker || ['SOX', 'HYNIX', 'SAMSUNG'].includes(item.ticker)) continue;
+        try {
+          if (provider === 'finnhub' && apiKey) {
+            const res = await fetch(`https://finnhub.io/api/v1/quote?symbol=${item.ticker}&token=${apiKey}`);
+            const q = await res.json();
+            if (q && q.c) {
+              item.price = `$${q.c.toFixed(2)}`;
+              const dp = q.dp || 0;
+              item.change = `${dp >= 0 ? '+' : ''}${dp.toFixed(2)}%`;
+              item.source = 'Finnhub 实时';
+            }
+          } else if (provider === 'twelvedata' && apiKey) {
+            const res = await fetch(`https://api.twelvedata.com/quote?symbol=${item.ticker}&apikey=${apiKey}`);
+            const q = await res.json();
+            if (q && q.close) {
+              const close = parseFloat(q.close);
+              const pct = parseFloat(q.percent_change || 0);
+              item.price = `$${close.toFixed(2)}`;
+              item.change = `${pct >= 0 ? '+' : ''}${pct.toFixed(2)}%`;
+              if (q.fifty_two_week && q.fifty_two_week.low && q.fifty_two_week.high) {
+                const low = parseFloat(q.fifty_two_week.low);
+                const high = parseFloat(q.fifty_two_week.high);
+                if (high > low) {
+                  item.score = Math.round(((close - low) / (high - low)) * 100);
+                  item.rangeText = `52周区间 $${low.toFixed(1)}–$${high.toFixed(1)}`;
+                }
+              }
+              item.source = 'TwelveData 实时';
+            }
+          } else if (provider === 'custom' && customUrl) {
+            const url = customUrl.replace('{SYMBOL}', encodeURIComponent(item.ticker));
+            const res = await fetch(url, { headers: apiKey ? { 'Authorization': `Bearer ${apiKey}` } : {} });
+            const q = await res.json();
+            if (q && q.price) {
+              item.price = typeof q.price === 'number' ? `$${q.price.toFixed(2)}` : q.price;
+              if (q.changePercent !== undefined) {
+                const p = parseFloat(q.changePercent);
+                item.change = `${p >= 0 ? '+' : ''}${p.toFixed(2)}%`;
+              }
+              if (q.high52 && q.low52 && q.price) {
+                item.score = Math.round(((q.price - q.low52) / (q.high52 - q.low52)) * 100);
+                item.rangeText = `52周区间 $${q.low52}–$${q.high52}`;
+              }
+              item.source = '自定义API实时';
+            }
+          }
+        } catch (err) {
+          console.warn(`拉取 ${item.ticker} 失败:`, err);
+        }
       }
     }
 
     function renderAllGrids() {
       document.getElementById('grid-global').innerHTML = globalMarkets.map((item, i) => buildCardHTML(item, i, 'glb')).join('');
       document.getElementById('grid-treasury').innerHTML = treasuryCurve.map((item, i) => buildCardHTML(item, i, 'tsy')).join('');
-      document.getElementById('grid-megacap').innerHTML = megaCapCompanies.map((item, i) => buildCardHTML(item, i, 'meg')).join('');
 
-      const filteredSemi = currentSemiCat === 'all'
-        ? semiSupplyChain
-        : semiSupplyChain.filter(x => x.cat === currentSemiCat);
-      document.getElementById('grid-semi').innerHTML = filteredSemi.map((item, i) => buildCardHTML(item, i, 'sem')).join('');
+      const customTab = document.getElementById('customTabBtn');
+      if (customTab) customTab.textContent = `我的自选查询池 (${customSymbols.length})`;
+
+      let list = [];
+      if (currentSemiCat === 'all') {
+        list = [...coreSupplyChain, ...customSymbols];
+      } else if (currentSemiCat === 'custom') {
+        list = customSymbols;
+      } else {
+        list = coreSupplyChain.filter(x => x.cat === currentSemiCat);
+      }
+
+      const gridEl = document.getElementById('grid-semi');
+      if (list.length === 0 && currentSemiCat === 'custom') {
+        gridEl.innerHTML = `<div class="col-span-full py-10 text-center text-xs text-slate-500 border border-dashed border-white/[0.08] rounded-2xl">当前自选池为空，可在顶部搜索框或下方看盘终端输入任意股票代码（如 CRDO、ALAB、SMCI）并点击“+ 加入自选仪表盘”。</div>`;
+      } else {
+        gridEl.innerHTML = list.map((item, i) => buildCardHTML(item, i, 'sem')).join('');
+      }
     }
 
-    // 分类切换
     document.querySelectorAll('.semi-tab').forEach(btn => {
       btn.addEventListener('click', () => {
         document.querySelectorAll('.semi-tab').forEach(b => {
@@ -495,7 +616,108 @@
       });
     });
 
-    // ==================== 4. 可折叠模块控制 ====================
+    // ==================== 4. 自定义代码查询与自选管理 ====================
+    function normalizeSymbol(raw) {
+      const s = raw.trim().toUpperCase();
+      if (!s) return null;
+      if (s.includes(':')) return { tvSymbol: s, ticker: s.split(':')[1] };
+      if (/^\d{6}$/.test(s)) return { tvSymbol: `KRX:${s}`, ticker: s };
+      if (/^\d{4,5}\.HK$/.test(s)) return { tvSymbol: `HKEX:${s.replace('.HK', '')}`, ticker: s };
+      return { tvSymbol: s, ticker: s };
+    }
+
+    function handleQuickLookup(isMobile = false) {
+      const input = document.getElementById(isMobile ? 'quickSymbolInputMobile' : 'quickSymbolInput');
+      const parsed = normalizeSymbol(input.value);
+      if (!parsed) return;
+      openSymbolChart(parsed.tvSymbol, `${parsed.ticker} 自定义查询`);
+      input.value = '';
+    }
+
+    function handleTerminalSearch() {
+      const input = document.getElementById('terminalSymbolInput');
+      const parsed = normalizeSymbol(input.value);
+      if (!parsed) return;
+      openSymbolChart(parsed.tvSymbol, `${parsed.ticker} 自定义查询`);
+    }
+
+    function addCurrentToCustomPool() {
+      const ticker = currentChartSymbol.includes(':') ? currentChartSymbol.split(':')[1] : currentChartSymbol;
+      if (customSymbols.some(x => x.ticker === ticker) || coreSupplyChain.some(x => x.ticker === ticker)) {
+        alert(`${ticker} 已经在监控列表中了！`);
+        return;
+      }
+      const newCard = {
+        cat: 'custom',
+        isCustom: true,
+        ticker: ticker,
+        badge: ticker.slice(0, 4),
+        title: `${ticker} (自定义自选)`,
+        subTitle: '点击卡片切换实时K线 · 支持API刷新',
+        score: 50,
+        mode: 'range',
+        price: '点击看盘',
+        change: '实时图已就绪',
+        rangeText: '接入 API Key 后自动显示52周分位',
+        source: '用户自定义池',
+        tvSymbol: currentChartSymbol,
+        tag: '自选标的'
+      };
+      customSymbols.push(newCard);
+      localStorage.setItem('james_custom_symbols', JSON.stringify(customSymbols));
+      refreshAllData(true);
+    }
+
+    function removeCustomSymbol(ticker) {
+      customSymbols = customSymbols.filter(x => x.ticker !== ticker);
+      localStorage.setItem('james_custom_symbols', JSON.stringify(customSymbols));
+      renderAllGrids();
+    }
+
+    // ==================== 5. API 配置弹窗逻辑 ====================
+    function openApiModal() {
+      document.getElementById('apiProviderSelect').value = localStorage.getItem('james_api_provider') || 'none';
+      document.getElementById('apiKeyInput').value = localStorage.getItem('james_api_key') || '';
+      document.getElementById('customEndpointInput').value = localStorage.getItem('james_api_url') || '';
+      const modal = document.getElementById('apiModal');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+
+    function closeApiModal() {
+      const modal = document.getElementById('apiModal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+
+    function saveApiConfig() {
+      const provider = document.getElementById('apiProviderSelect').value;
+      const key = document.getElementById('apiKeyInput').value.trim();
+      const url = document.getElementById('customEndpointInput').value.trim();
+
+      localStorage.setItem('james_api_provider', provider);
+      localStorage.setItem('james_api_key', key);
+      localStorage.setItem('james_api_url', url);
+
+      updateApiStatusBadge();
+      closeApiModal();
+      refreshAllData(true);
+    }
+
+    function updateApiStatusBadge() {
+      const provider = localStorage.getItem('james_api_provider') || 'none';
+      const badge = document.getElementById('apiStatusBadge');
+      if (!badge) return;
+      const names = {
+        none: '数据源模式：免费实时接口 + 基准快照 + TradingView实时图',
+        finnhub: '数据源模式：Finnhub 实时行情接口已连接（每5分钟轮询）',
+        twelvedata: '数据源模式：Twelve Data 全球接口已连接（每5分钟轮询）',
+        custom: '数据源模式：自定义 REST JSON 网关已连接（每5分钟轮询）'
+      };
+      badge.textContent = names[provider] || names.none;
+    }
+
+    // ==================== 6. 折叠与看盘联动 ====================
     function toggleSection(secId) {
       const el = document.getElementById(secId);
       if (el) el.classList.toggle('section-collapsed');
@@ -503,15 +725,11 @@
 
     function toggleAllSections(expand) {
       document.querySelectorAll('main > section').forEach(sec => {
-        if (expand) {
-          sec.classList.remove('section-collapsed');
-        } else {
-          sec.classList.add('section-collapsed');
-        }
+        if (expand) sec.classList.remove('section-collapsed');
+        else sec.classList.add('section-collapsed');
       });
     }
 
-    // ==================== 5. 点击卡片联动 TradingView K线 ====================
     function loadTradingViewWidget(symbol) {
       const container = document.getElementById('tvChartContainer');
       container.innerHTML = '';
@@ -534,6 +752,8 @@
     }
 
     function openSymbolChart(tvSymbol, title) {
+      currentChartSymbol = tvSymbol;
+      currentChartTitle = title;
       const chartSec = document.getElementById('sec-chart');
       chartSec.classList.remove('section-collapsed');
       document.getElementById('activeChartLabel').textContent = `当前标的：${title} (${tvSymbol})`;
@@ -541,8 +761,8 @@
       chartSec.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
 
-    // ==================== 6. 每 5 分钟自动刷新计时器 ====================
-    let secondsLeft = 300; // 5分钟 = 300秒
+    // ==================== 7. 每 5 分钟自动刷新计时器 ====================
+    let secondsLeft = 300;
 
     async function refreshAllData(manual = false) {
       const spinner = document.getElementById('refreshSpinner');
@@ -550,7 +770,8 @@
 
       await Promise.all([
         fetchLiveCryptoFearGreed(),
-        fetchLiveBTCSpot()
+        fetchLiveBTCSpot(),
+        fetchExternalQuotesIfConfigured()
       ]);
 
       renderAllGrids();
@@ -563,19 +784,17 @@
 
     setInterval(() => {
       secondsLeft--;
-      if (secondsLeft <= 0) {
-        refreshAllData(false);
-      }
+      if (secondsLeft <= 0) refreshAllData(false);
       const m = String(Math.floor(secondsLeft / 60)).padStart(2, '0');
       const s = String(secondsLeft % 60).padStart(2, '0');
       const timerEl = document.getElementById('countdownTimer');
       if (timerEl) timerEl.textContent = `${m}:${s}`;
     }, 1000);
 
-    // 初始化启动
     window.addEventListener('DOMContentLoaded', () => {
+      updateApiStatusBadge();
       refreshAllData(false);
-      loadTradingViewWidget('NASDAQ:NVDA');
+      loadTradingViewWidget('NASDAQ:SOX');
     });
   </script>
 </body>
