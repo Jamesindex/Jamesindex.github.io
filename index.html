@@ -1,822 +1,581 @@
 <!DOCTYPE html>
-<html lang="zh-CN" class="dark">
+<html lang="zh-CN">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>JAMES INDEX // US Tech & Volatility Radar</title>
+  <title>JAMES INDEX · 全球市场情绪与半导体产业链监控</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <script>
-    tailwind.config = {
-      darkMode: 'class',
-      theme: {
-        extend: {
-          fontFamily: {
-            sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
-            mono: ['JetBrains Mono', 'monospace'],
-          },
-          colors: {
-            terminal: {
-              bg: '#090d16',
-              card: '#111827',
-              elevated: '#161f33',
-              border: '#1e293b',
-            }
-          }
-        }
-      }
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600;700&display=swap');
+    body {
+      background-color: #070b14;
+      color: #f1f5f9;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
     }
-  </script>
+    .font-mono-num {
+      font-family: 'JetBrains Mono', monospace;
+      font-variant-numeric: tabular-nums;
+    }
+    .gauge-card {
+      background: linear-gradient(180deg, #0d1322 0%, #0a0f1c 100%);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+    .gauge-card:hover {
+      transform: translateY(-2px);
+      border-color: rgba(56, 189, 248, 0.35);
+      box-shadow: 0 12px 30px -10px rgba(0, 0, 0, 0.7);
+    }
+    .section-body {
+      transition: all 0.25s ease;
+    }
+    .section-collapsed .section-body {
+      display: none;
+    }
+    .section-collapsed .chevron-icon {
+      transform: rotate(-90deg);
+    }
+    .ruler-gradient {
+      background: linear-gradient(90deg, #ef4444 0%, #f59e0b 35%, #eab308 50%, #22c55e 75%, #10b981 100%);
+    }
+  </style>
 </head>
-<body class="bg-slate-50 text-slate-900 dark:bg-terminal-bg dark:text-slate-100 transition-colors duration-200 min-h-screen font-sans antialiased selection:bg-emerald-500 selection:text-white">
+<body class="min-h-screen antialiased selection:bg-emerald-500/30 selection:text-emerald-200">
 
-  <!-- Toast Notification (No alert() used) -->
-  <div id="toast" class="fixed bottom-5 right-5 z-50 transform translate-y-24 opacity-0 transition-all duration-300 pointer-events-none">
-    <div class="bg-slate-900 dark:bg-slate-800 text-white border border-slate-700 px-4 py-3 rounded-xl shadow-2xl flex items-center space-x-2.5 text-xs sm:text-sm font-medium">
-      <span id="toastIcon" class="text-emerald-400 font-bold">●</span>
-      <span id="toastMsg">数据已同步</span>
-    </div>
-  </div>
-
-  <!-- Optional Finnhub API Key Modal -->
-  <div id="apiModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/75 backdrop-blur-sm p-4">
-    <div class="bg-white dark:bg-terminal-card border border-slate-200 dark:border-terminal-border rounded-2xl max-w-md w-full p-6 shadow-2xl relative">
-      <button id="closeApiModal" class="absolute top-4 right-4 w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 flex items-center justify-center text-slate-500 dark:text-slate-300 text-sm">✕</button>
-      <div class="flex items-center space-x-2 mb-2">
-        <span class="px-2 py-0.5 rounded bg-emerald-500/15 text-emerald-500 text-xs font-mono font-bold">API CONFIG</span>
-        <h3 class="text-base font-bold">配置免费 Finnhub 实时行情 Key</h3>
-      </div>
-      <p class="text-xs text-slate-500 dark:text-slate-400 leading-relaxed mb-4">
-        默认情况下，页面已通过 <strong>TradingView 实时组件</strong> 和 <strong>CNN 恐慌指数公开接口</strong> 自动工作。如果你希望表格内的个股报价也每 5 分钟直连美股实时撮合接口，可在 <a href="https://finnhub.io/register" target="_blank" rel="noopener" class="text-blue-500 underline">finnhub.io</a> 免费注册并填入 Key（仅保存在你的浏览器本地）。
-      </p>
-      <input type="text" id="finnhubKeyInput" placeholder="输入 Finnhub API Key (例如: cxxxxxxxxxxxxx)..."
-        class="w-full px-3.5 py-2.5 rounded-xl text-xs font-mono bg-slate-50 dark:bg-terminal-bg border border-slate-300 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 mb-4" />
-      <div class="flex justify-end space-x-2">
-        <button id="clearApiKeyBtn" class="px-3.5 py-2 rounded-xl text-xs font-medium bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300">
-          清除 Key
-        </button>
-        <button id="saveApiKeyBtn" class="px-4 py-2 rounded-xl text-xs font-semibold bg-emerald-600 hover:bg-emerald-500 text-white">
-          保存并立即刷新
-        </button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Top Live TradingView Ticker Tape -->
-  <div class="w-full border-b border-slate-200 dark:border-terminal-border bg-white dark:bg-[#060911] overflow-hidden">
-    <div class="tradingview-widget-container" id="tvTickerTape">
-      <div class="tradingview-widget-container__widget"></div>
-    </div>
-  </div>
-
-  <!-- Terminal Header -->
-  <header class="sticky top-0 z-30 border-b border-slate-200/80 dark:border-terminal-border/90 bg-white/90 dark:bg-terminal-bg/90 backdrop-blur-md">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-3">
-      <!-- Brand & Live Status -->
-      <div class="flex items-center space-x-3 min-w-0">
-        <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-emerald-500 to-cyan-600 flex items-center justify-center text-white font-mono font-extrabold text-sm shadow-lg shadow-emerald-500/20 shrink-0">
+  <!-- 顶部状态与控制栏 -->
+  <header class="sticky top-0 z-40 border-b border-white/[0.06] bg-[#070b14]/90 backdrop-blur-md">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-4">
+      <div class="flex items-center gap-3">
+        <div class="w-8 h-8 rounded-lg bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400 font-bold text-sm">
           JI
         </div>
-        <div class="truncate">
-          <div class="flex items-center space-x-2">
-            <h1 class="text-sm sm:text-base font-extrabold tracking-tight font-mono">JAMES INDEX <span class="text-slate-400 font-normal hidden sm:inline">// US TECH & VOL RADAR</span></h1>
-            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-mono font-semibold bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/25 shrink-0">
-              <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-1.5 animate-ping"></span>
-              LIVE
+        <div>
+          <div class="flex items-center gap-2">
+            <span class="font-bold tracking-tight text-white text-base sm:text-lg">JAMES INDEX</span>
+            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+              <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+              5m 自动刷新
             </span>
           </div>
-          <div class="text-[11px] font-mono text-slate-500 dark:text-slate-400 flex items-center space-x-2">
-            <span id="estClock">EST --:--:--</span>
-            <span>·</span>
-            <span id="lastUpdatedText">上次更新: 初始化中...</span>
-          </div>
+          <p class="text-[11px] text-slate-400 hidden sm:block">同一把尺（0–100）· 全球跨市场情绪、美债曲线与半导体传导链监控</p>
         </div>
       </div>
 
-      <!-- 5-Minute Refresh Controls & Utility Buttons -->
-      <div class="flex items-center space-x-2 shrink-0">
-        <!-- 5-Min Auto-Refresh Pill -->
-        <div class="flex items-center bg-slate-100 dark:bg-terminal-card border border-slate-200 dark:border-terminal-border rounded-xl px-2.5 py-1.5 space-x-2">
-          <button id="toggleAutoRefresh" title="开启/暂停 5 分钟自动刷新" class="flex items-center space-x-1.5 text-xs font-mono font-semibold text-emerald-600 dark:text-emerald-400">
-            <span id="autoStatusDot" class="w-2 h-2 rounded-full bg-emerald-500"></span>
-            <span id="countdownTimer">05:00</span>
-          </button>
-          <span class="text-slate-300 dark:text-slate-700">|</span>
-          <button id="manualRefreshBtn" title="立即刷新实时数据" class="text-xs font-medium text-slate-600 dark:text-slate-300 hover:text-emerald-500 dark:hover:text-emerald-400 transition-colors">
-            ↻ 刷新
-          </button>
+      <div class="flex items-center gap-2 sm:gap-3">
+        <!-- 倒计时显示 -->
+        <div class="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/[0.03] border border-white/[0.06] text-xs text-slate-300 font-mono-num">
+          <span class="text-slate-500">下次刷新</span>
+          <span id="countdownTimer" class="text-emerald-400 font-semibold">05:00</span>
         </div>
 
-        <button id="openApiModalBtn" title="配置 Finnhub 实时接口 Key" class="hidden md:inline-flex items-center px-3 py-2 rounded-xl text-xs font-mono font-medium bg-slate-100 dark:bg-terminal-card hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-terminal-border transition-colors">
-          ⚙ API
+        <button onclick="refreshAllData(true)" class="px-3 py-1.5 rounded-lg bg-white/[0.05] hover:bg-white/[0.1] border border-white/[0.08] text-xs font-medium text-slate-200 transition flex items-center gap-1.5">
+          <span id="refreshSpinner">↻</span>
+          <span>立即刷新</span>
         </button>
 
-        <button id="themeToggle" title="切换深色/浅色主题" class="p-2 rounded-xl border border-slate-200 dark:border-terminal-border bg-white dark:bg-terminal-card hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors text-xs">
-          <span id="themeIcon">☀️</span>
+        <button onclick="toggleAllSections(true)" class="px-2.5 py-1.5 rounded-lg bg-white/[0.03] hover:bg-white/[0.08] border border-white/[0.06] text-xs text-slate-300 transition">
+          全部展开
+        </button>
+        <button onclick="toggleAllSections(false)" class="px-2.5 py-1.5 rounded-lg bg-white/[0.03] hover:bg-white/[0.08] border border-white/[0.06] text-xs text-slate-300 transition">
+          全部折叠
         </button>
       </div>
     </div>
   </header>
 
-  <!-- Main Dashboard Grid -->
-  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 py-8 space-y-10">
 
-    <!-- SECTION 1: PANIC, VOLATILITY & MACRO SENTIMENT MONITOR -->
-    <section class="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-5">
-      
-      <!-- Card A: CNN Fear & Greed Live Gauge (4 cols) -->
-      <div class="lg:col-span-4 p-5 rounded-2xl bg-white dark:bg-terminal-card border border-slate-200 dark:border-terminal-border shadow-sm flex flex-col justify-between">
-        <div class="flex items-center justify-between">
-          <div>
-            <span class="text-[11px] font-mono uppercase tracking-wider text-slate-500 dark:text-slate-400">CNN FEAR & GREED INDEX</span>
-            <h2 class="text-base font-bold mt-0.5">美股市场恐慌与贪婪指数</h2>
-          </div>
-          <span id="fgSourceBadge" class="px-2 py-0.5 rounded text-[10px] font-mono font-semibold bg-amber-500/15 text-amber-500 border border-amber-500/25">
-            LIVE FEED
-          </span>
-        </div>
-
-        <!-- Semicircular SVG Gauge -->
-        <div class="my-3 flex flex-col items-center justify-center relative">
-          <svg viewBox="0 0 220 125" class="w-56 h-32 overflow-visible">
-            <defs>
-              <linearGradient id="fgGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                <stop offset="0%" stop-color="#ef4444" />
-                <stop offset="30%" stop-color="#f97316" />
-                <stop offset="50%" stop-color="#eab308" />
-                <stop offset="75%" stop-color="#22c55e" />
-                <stop offset="100%" stop-color="#10b981" />
-              </linearGradient>
-            </defs>
-            <!-- Background Track -->
-            <path d="M 20 110 A 90 90 0 0 1 200 110" fill="none" stroke="currentColor" class="text-slate-200 dark:text-slate-800" stroke-width="16" stroke-linecap="round" />
-            <!-- Colored Progress Arc -->
-            <path id="fgArc" d="M 20 110 A 90 90 0 0 1 200 110" fill="none" stroke="url(#fgGradient)" stroke-width="16" stroke-linecap="round" stroke-dasharray="283" stroke-dashoffset="220" class="transition-all duration-700" />
-            <!-- Needle -->
-            <g id="fgNeedle" transform="rotate(-65 110 110)" class="transition-transform duration-700">
-              <line x1="110" y1="110" x2="110" y2="32" stroke="currentColor" class="text-slate-800 dark:text-white" stroke-width="2.5" stroke-linecap="round" />
-              <circle cx="110" cy="110" r="5.5" fill="#10b981" />
-            </g>
-          </svg>
-          <div class="text-center -mt-3">
-            <div id="fgScore" class="text-3xl font-mono font-extrabold tracking-tight text-rose-500">18</div>
-            <div id="fgRating" class="text-xs font-bold uppercase tracking-wider text-rose-400 mt-0.5">EXTREME FEAR · 极度恐慌</div>
+    <!-- ==================== 模块 1：全球市场情绪（8大跨资产） ==================== -->
+    <section id="sec-global" class="space-y-5">
+      <div onclick="toggleSection('sec-global')" class="flex items-end justify-between cursor-pointer group select-none">
+        <div>
+          <div class="text-[11px] font-bold tracking-[0.18em] text-emerald-400 uppercase mb-1">GLOBAL MARKET SENTIMENT</div>
+          <div class="flex items-center gap-2.5">
+            <h2 class="text-2xl sm:text-3xl font-bold text-white tracking-tight">全球市场情绪</h2>
+            <svg class="chevron-icon w-5 h-5 text-slate-400 transition-transform duration-200" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+            </svg>
           </div>
         </div>
+        <div class="text-xs text-slate-400 font-mono-num">8 项核心资产 · 点击标题栏可折叠</div>
+      </div>
 
-        <!-- Historical Comparison Mini Row -->
-        <div class="grid grid-cols-3 gap-2 pt-3 border-t border-slate-100 dark:border-slate-800 text-center text-[11px] font-mono">
-          <div>
-            <div class="text-slate-400">昨日</div>
-            <div id="fgPrevClose" class="font-bold text-slate-700 dark:text-slate-200 mt-0.5">21 (恐慌)</div>
+      <div class="section-body grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4" id="grid-global">
+        <!-- JS 渲染 -->
+      </div>
+    </section>
+
+    <!-- ==================== 模块 2：美债收益率曲线（10Y / 20Y / 30Y） ==================== -->
+    <section id="sec-treasury" class="space-y-5">
+      <div onclick="toggleSection('sec-treasury')" class="flex items-end justify-between cursor-pointer group select-none">
+        <div>
+          <div class="text-[11px] font-bold tracking-[0.18em] text-sky-400 uppercase mb-1">US TREASURY YIELD CURVE</div>
+          <div class="flex items-center gap-2.5">
+            <h2 class="text-2xl sm:text-3xl font-bold text-white tracking-tight">美债长端收益率与期限利差</h2>
+            <svg class="chevron-icon w-5 h-5 text-slate-400 transition-transform duration-200" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+            </svg>
           </div>
-          <div>
-            <div class="text-slate-400">1周前</div>
-            <div id="fgPrevWeek" class="font-bold text-slate-700 dark:text-slate-200 mt-0.5">34 (恐慌)</div>
+        </div>
+        <div class="text-xs text-slate-400 font-mono-num">10Y · 20Y · 30Y · 30Y-10Y利差</div>
+      </div>
+
+      <div class="section-body grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4" id="grid-treasury">
+        <!-- JS 渲染 -->
+      </div>
+    </section>
+
+    <!-- ==================== 模块 3：大型科技公司（七姐妹 + TSM） ==================== -->
+    <section id="sec-megacap" class="space-y-5">
+      <div onclick="toggleSection('sec-megacap')" class="flex items-end justify-between cursor-pointer group select-none">
+        <div>
+          <div class="text-[11px] font-bold tracking-[0.18em] text-emerald-400 uppercase mb-1">MEGA-CAP COMPANIES</div>
+          <div class="flex items-center gap-2.5">
+            <h2 class="text-2xl sm:text-3xl font-bold text-white tracking-tight">大型科技公司（七姐妹 + TSM）</h2>
+            <svg class="chevron-icon w-5 h-5 text-slate-400 transition-transform duration-200" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+            </svg>
           </div>
+        </div>
+        <div class="text-xs text-slate-400 font-mono-num">8 项指标 · 52周价格区间位置</div>
+      </div>
+
+      <div class="section-body grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4" id="grid-megacap">
+        <!-- JS 渲染 -->
+      </div>
+    </section>
+
+    <!-- ==================== 模块 4：半导体传导链（费半 SOX → 海力士/三星 → 光模块/ASIC） ==================== -->
+    <section id="sec-semi" class="space-y-5">
+      <div onclick="toggleSection('sec-semi')" class="flex items-end justify-between cursor-pointer group select-none">
+        <div>
+          <div class="text-[11px] font-bold tracking-[0.18em] text-amber-400 uppercase mb-1">SEMICONDUCTOR & AI SUPPLY CHAIN</div>
+          <div class="flex items-center gap-2.5">
+            <h2 class="text-2xl sm:text-3xl font-bold text-white tracking-tight">半导体与存储传导链（美股看费半 · 费半看韩系双雄）</h2>
+            <svg class="chevron-icon w-5 h-5 text-slate-400 transition-transform duration-200" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+            </svg>
+          </div>
+        </div>
+        <div class="text-xs text-slate-400 font-mono-num">SOX · KOSPI200 · 海力士 · 三星 · 光模块</div>
+      </div>
+
+      <div class="section-body space-y-6">
+        <!-- 分类过滤标签 -->
+        <div class="flex flex-wrap gap-2" id="semiFilterTabs">
+          <button data-cat="all" class="semi-tab active px-3.5 py-1.5 rounded-lg text-xs font-medium bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">全部核心标的 (12)</button>
+          <button data-cat="index-memory" class="semi-tab px-3.5 py-1.5 rounded-lg text-xs font-medium bg-white/[0.04] text-slate-300 border border-white/[0.08] hover:bg-white/[0.08]">费半 & 韩系存储先导 (SOX/海力士/三星/MU)</button>
+          <button data-cat="asic" class="semi-tab px-3.5 py-1.5 rounded-lg text-xs font-medium bg-white/[0.04] text-slate-300 border border-white/[0.08] hover:bg-white/[0.08]">AI 算力与定制 ASIC (AVGO/MRVL/AMD/ARM)</button>
+          <button data-cat="optical-power" class="semi-tab px-3.5 py-1.5 rounded-lg text-xs font-medium bg-white/[0.04] text-slate-300 border border-white/[0.08] hover:bg-white/[0.08]">光互连与 800V 功率 (COHR/LITE/VRT/WOLF)</button>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4" id="grid-semi">
+          <!-- JS 渲染 -->
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== 模块 5：交互式实时 K 线联动看盘（可折叠，默认收起省空间） ==================== -->
+    <section id="sec-chart" class="section-collapsed space-y-5">
+      <div onclick="toggleSection('sec-chart')" class="flex items-end justify-between cursor-pointer group select-none">
+        <div>
+          <div class="text-[11px] font-bold tracking-[0.18em] text-purple-400 uppercase mb-1">INTERACTIVE TERMINAL</div>
+          <div class="flex items-center gap-2.5">
+            <h2 class="text-xl sm:text-2xl font-bold text-white tracking-tight">实时分时与 K 线联动图表（点击上方任意卡片自动切换）</h2>
+            <svg class="chevron-icon w-5 h-5 text-slate-400 transition-transform duration-200" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+            </svg>
+          </div>
+        </div>
+        <div class="text-xs text-emerald-400 font-mono-num" id="activeChartLabel">当前标的：NASDAQ:NVDA</div>
+      </div>
+
+      <div class="section-body rounded-2xl border border-white/[0.08] bg-[#0d1322] overflow-hidden">
+        <div id="tvChartContainer" class="w-full h-[460px]"></div>
+      </div>
+    </section>
+
+    <!-- ==================== 底部阅读方法说明（复刻同款“同一把尺，不同的含义”） ==================== -->
+    <footer class="rounded-2xl border border-white/[0.06] bg-[#0b101d] p-6 sm:p-10 space-y-8">
+      <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+        <div>
+          <div class="text-xs font-semibold text-emerald-400 mb-2">阅读方法</div>
+          <h3 class="text-2xl sm:text-4xl font-bold text-white tracking-tight">同一把尺，不同的含义</h3>
+        </div>
+        <p class="text-sm text-slate-400 max-w-md leading-relaxed">
+          市场卡片的分数越高，代表来源指数或反向波动率越偏乐观；美债与公司卡片的分数越高，只代表当前收益率或股价越接近 52 周高点。
+        </p>
+      </div>
+
+      <!-- 0 - 100 渐变标尺 -->
+      <div class="space-y-2.5">
+        <div class="h-1.5 w-full rounded-full ruler-gradient"></div>
+        <div class="grid grid-cols-5 text-xs font-mono-num text-slate-400">
           <div>
-            <div class="text-slate-400">1月前</div>
-            <div id="fgPrevMonth" class="font-bold text-slate-700 dark:text-slate-200 mt-0.5">58 (贪婪)</div>
+            <div class="text-white font-semibold">0</div>
+            <div class="text-[11px] text-slate-500">极度恐慌 / 52周低位</div>
+          </div>
+          <div class="text-center">
+            <div class="text-white font-semibold">25</div>
+            <div class="text-[11px] text-slate-500">恐慌 / 区间偏低</div>
+          </div>
+          <div class="text-center">
+            <div class="text-white font-semibold">50</div>
+            <div class="text-[11px] text-slate-500">中性 / 区间中位</div>
+          </div>
+          <div class="text-center">
+            <div class="text-white font-semibold">75</div>
+            <div class="text-[11px] text-slate-500">贪婪 / 区间偏高</div>
+          </div>
+          <div class="text-right">
+            <div class="text-white font-semibold">100</div>
+            <div class="text-[11px] text-slate-500">极度贪婪 / 52周高位</div>
           </div>
         </div>
       </div>
 
-      <!-- Card B: Institutional Volatility & Squeeze Radar (4 cols) -->
-      <div class="lg:col-span-4 p-5 rounded-2xl bg-white dark:bg-terminal-card border border-slate-200 dark:border-terminal-border shadow-sm flex flex-col justify-between">
-        <div>
-          <div class="flex items-center justify-between mb-3">
-            <div>
-              <span class="text-[11px] font-mono uppercase tracking-wider text-slate-500 dark:text-slate-400">VOLATILITY & SQUEEZE METRICS</span>
-              <h2 class="text-base font-bold mt-0.5">机构波动率与仓位监控</h2>
+      <!-- 三栏说明 -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6 pt-4 border-t border-white/[0.06]">
+        <div class="space-y-1.5">
+          <div class="text-xs font-mono-num font-bold text-emerald-400">01</div>
+          <div class="text-sm font-bold text-white">原生情绪指数</div>
+          <p class="text-xs text-slate-400 leading-relaxed">
+            加密直接接入 Alternative.me 实时接口，美股沿用 CNN 恐慌与贪婪指数分数及评级（同步参考高盛 Vol Panic 读数）。
+          </p>
+        </div>
+        <div class="space-y-1.5">
+          <div class="text-xs font-mono-num font-bold text-emerald-400">02</div>
+          <div class="text-sm font-bold text-white">反向波动率映射</div>
+          <p class="text-xs text-slate-400 leading-relaxed">
+            欧洲、印度、日本、港股、黄金与原油将隐含/实现波动率反向映射到 0–100 情绪尺，原始点位与涨跌幅同步展示。
+          </p>
+        </div>
+        <div class="space-y-1.5">
+          <div class="text-xs font-mono-num font-bold text-emerald-400">03</div>
+          <div class="text-sm font-bold text-white">52 周位置 & 产业链传导</div>
+          <p class="text-xs text-slate-400 leading-relaxed">
+            公司、美债与半导体卡片展示当前值在 52 周高低点中的相对分位（0–100），重点跟踪费半（SOX）与海力士/三星的先导联动，不构成买卖信号。
+          </p>
+        </div>
+      </div>
+
+      <div class="pt-4 border-t border-white/[0.06] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 text-[11px] text-slate-500">
+        <div>数据链路：实时接入 Alternative.me / CNN / Yahoo Finance 公开行情源，每 5 分钟自动轮询刷新。</div>
+        <div>仅供跨市场情绪与产业链观察，不构成投资或交易建议。</div>
+      </div>
+    </footer>
+  </main>
+
+  <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
+  <script>
+    // ==================== 1. 数据模型定义 ====================
+    // 分数颜色与标签映射（严格遵循 0-100 同一把尺）
+    function getGaugeStyle(score, mode = 'range') {
+      let color = '#eab308';
+      let label = mode === 'sentiment' ? '中性' : '区间中位';
+      if (score <= 25) {
+        color = '#ef4444';
+        label = mode === 'sentiment' ? '极度恐慌' : '接近 52 周低位';
+      } else if (score <= 45) {
+        color = '#f97316';
+        label = mode === 'sentiment' ? '恐慌' : '区间偏低';
+      } else if (score <= 60) {
+        color = '#eab308';
+        label = mode === 'sentiment' ? '中性' : '区间中位';
+      } else if (score <= 80) {
+        color = '#4ade80';
+        label = mode === 'sentiment' ? '贪婪' : '区间偏高';
+      } else {
+        color = '#10b981';
+        label = mode === 'sentiment' ? '极度贪婪' : '接近 52 周高位';
+      }
+      return { color, label };
+    }
+
+    // 生成半圆弧 SVG（与截图完全一致的红-黄-绿渐变弧线 + 白色指示圆点）
+    function renderArcSVG(score, scoreColor, uid) {
+      const clamped = Math.max(0, Math.min(100, score));
+      // 角度从 180度(左端) 到 0度(右端)
+      const angleRad = Math.PI * (1 - clamped / 100);
+      const cx = 100, cy = 92, r = 74;
+      const dotX = (cx + r * Math.cos(angleRad)).toFixed(2);
+      const dotY = (cy - r * Math.sin(angleRad)).toFixed(2);
+
+      return `
+        <svg viewBox="0 0 200 112" class="w-full max-w-[210px] mx-auto overflow-visible">
+          <defs>
+            <linearGradient id="grad-${uid}" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stop-color="#ef4444" />
+              <stop offset="35%" stop-color="#f59e0b" />
+              <stop offset="65%" stop-color="#eab308" />
+              <stop offset="100%" stop-color="#10b981" />
+            </linearGradient>
+          </defs>
+          <!-- 背景轨道 -->
+          <path d="M 26 92 A 74 74 0 0 1 174 92" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="11" stroke-linecap="round" />
+          <!-- 渐变主弧线 -->
+          <path d="M 26 92 A 74 74 0 0 1 174 92" fill="none" stroke="url(#grad-${uid})" stroke-width="11" stroke-linecap="round" />
+          <!-- 刻度数字 -->
+          <text x="14" y="96" fill="#64748b" font-size="9" font-family="JetBrains Mono">0</text>
+          <text x="178" y="96" fill="#64748b" font-size="9" font-family="JetBrains Mono">100</text>
+          <!-- 指示圆点 -->
+          <circle cx="${dotX}" cy="${dotY}" r="7.5" fill="#ffffff" stroke="${scoreColor}" stroke-width="3" />
+        </svg>
+      `;
+    }
+
+    // 渲染单张标准卡片
+    function buildCardHTML(item, idx, prefix) {
+      const uid = `${prefix}-${idx}`;
+      const st = getGaugeStyle(item.score, item.mode);
+      const changeColor = item.change.startsWith('+') ? 'text-emerald-400' : (item.change.startsWith('-') ? 'text-rose-400' : 'text-slate-300');
+
+      return `
+        <div onclick="openSymbolChart('${item.tvSymbol}', '${item.code} · ${item.name}')" class="gauge-card rounded-2xl p-4 sm:p-5 flex flex-col justify-between cursor-pointer">
+          <!-- 卡片头部 -->
+          <div class="flex items-start justify-between gap-2">
+            <div class="flex items-center gap-2.5 min-w-0">
+              <div class="w-8 h-8 rounded-lg bg-emerald-500/10 border border-emerald-500/25 flex items-center justify-center text-[11px] font-bold font-mono-num text-emerald-300 shrink-0">
+                ${item.badge}
+              </div>
+              <div class="min-w-0">
+                <div class="font-bold text-white text-sm sm:text-base truncate">${item.code}</div>
+                <div class="text-[11px] text-slate-400 truncate">${item.subTitle}</div>
+              </div>
             </div>
-            <span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-rose-500/15 text-rose-500 border border-rose-500/25">
-              PANIC PEAK
+            <span class="px-2 py-0.5 rounded text-[10px] font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 shrink-0">
+              ${item.tag || '实时'}
             </span>
           </div>
 
-          <div class="space-y-3">
-            <!-- Metric 1 -->
-            <div class="p-3 rounded-xl bg-slate-50 dark:bg-terminal-bg border border-slate-200/70 dark:border-slate-800">
-              <div class="flex items-center justify-between text-xs">
-                <span class="text-slate-500 dark:text-slate-400 font-medium">US Vol Panic Index (GS Desk)</span>
-                <span class="font-mono font-extrabold text-rose-500">9.8 / 10.0</span>
+          <!-- 半圆仪表盘 -->
+          <div class="my-3 relative">
+            ${renderArcSVG(item.score, st.color, uid)}
+            <div class="text-center -mt-9">
+              <div class="text-3xl sm:text-4xl font-extrabold font-mono-num tracking-tight" style="color: ${st.color}">
+                ${item.score}
               </div>
-              <div class="w-full h-1.5 bg-slate-200 dark:bg-slate-800 rounded-full overflow-hidden mt-1.5">
-                <div class="h-full bg-gradient-to-r from-amber-500 to-rose-500 rounded-full" style="width: 98%"></div>
+              <div class="text-[11px] text-slate-400 mt-0.5">${item.mode === 'sentiment' ? '情绪分' : '区间分'}</div>
+            </div>
+          </div>
+
+          <!-- 状态胶囊与价格区间 -->
+          <div class="text-center space-y-2 mt-1">
+            <div>
+              <span class="inline-block px-3 py-1 rounded-full text-xs font-semibold border" 
+                style="color: ${st.color}; border-color: ${st.color}40; background-color: ${st.color}15;">
+                ${st.label}
+              </span>
+            </div>
+            <div class="pt-1">
+              <div class="text-xs sm:text-sm font-mono-num font-semibold text-slate-200">
+                ${item.price} <span class="mx-1 text-slate-600">·</span> <span class="${changeColor}">${item.change}</span>
               </div>
-              <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-1.5">历史读数 &gt; 9.5 往往对应短期恐慌见顶与空头回补缓解。</p>
-            </div>
-
-            <!-- Metric 2 & 3 Grid -->
-            <div class="grid grid-cols-2 gap-2.5">
-              <div class="p-3 rounded-xl bg-slate-50 dark:bg-terminal-bg border border-slate-200/70 dark:border-slate-800">
-                <div class="text-[11px] text-slate-400">HF 净杠杆分位</div>
-                <div class="text-sm font-mono font-bold text-emerald-500 mt-0.5">2Yr Lows</div>
-                <div class="text-[10px] text-slate-500 mt-0.5">快钱仓位已极度出清</div>
-              </div>
-              <div class="p-3 rounded-xl bg-slate-50 dark:bg-terminal-bg border border-slate-200/70 dark:border-slate-800">
-                <div class="text-[11px] text-slate-400">标普6周跨式期权</div>
-                <div class="text-sm font-mono font-bold text-amber-500 mt-0.5">2.0x (1W)</div>
-                <div class="text-[10px] text-slate-500 mt-0.5">隐含波动率溢价高企</div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="pt-3 mt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-[11px] font-mono">
-          <span class="text-slate-400">交易台策略倾向:</span>
-          <span class="text-emerald-500 font-semibold">卖波动率 / 有限亏损看涨</span>
-        </div>
-      </div>
-
-      <!-- Card C: Live Macro & Index Mini Overview (TradingView Market Overview Widget) (4 cols) -->
-      <div class="lg:col-span-4 p-4 rounded-2xl bg-white dark:bg-terminal-card border border-slate-200 dark:border-terminal-border shadow-sm flex flex-col">
-        <div class="flex items-center justify-between mb-2 px-1">
-          <div>
-            <span class="text-[11px] font-mono uppercase tracking-wider text-slate-500 dark:text-slate-400">MACRO & RATES PULSE</span>
-            <h2 class="text-base font-bold">核心指数 / 恐慌 VIX / 美债</h2>
-          </div>
-          <span class="text-[11px] font-mono text-slate-400">Core PCE: 3.3%</span>
-        </div>
-        <div class="flex-1 min-h-[215px] rounded-xl overflow-hidden" id="tvMiniIndices">
-          <!-- TradingView Single Quote / Mini Symbol Overview injected by JS -->
-        </div>
-      </div>
-    </section>
-
-    <!-- SECTION 2: INTERACTIVE TRADINGVIEW LIVE CHART + WATCHLIST -->
-    <section class="grid grid-cols-1 xl:grid-cols-12 gap-5">
-      
-      <!-- Left/Top: Watchlist Table (7 cols on XL) -->
-      <div class="xl:col-span-7 space-y-4">
-        
-        <!-- Sector Filter Tabs & Search -->
-        <div class="p-3.5 rounded-2xl bg-white dark:bg-terminal-card border border-slate-200 dark:border-terminal-border space-y-3">
-          <div class="flex flex-wrap gap-1.5" id="sectorTabs">
-            <button data-sector="ALL" class="sector-btn px-3 py-1.5 rounded-xl text-xs font-semibold bg-emerald-600 text-white shadow-sm transition-all">
-              全部核心标的 (21)
-            </button>
-            <button data-sector="COMPUTE" class="sector-btn px-3 py-1.5 rounded-xl text-xs font-medium bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-all">
-              ⚡ AI 算力与晶圆
-            </button>
-            <button data-sector="MEMORY" class="sector-btn px-3 py-1.5 rounded-xl text-xs font-medium bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-all">
-              💾 存储与 HBM
-            </button>
-            <button data-sector="OPTICAL_POWER" class="sector-btn px-3 py-1.5 rounded-xl text-xs font-medium bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-all">
-              🔌 光模块与 800V 供电
-            </button>
-            <button data-sector="MEGA_ETF" class="sector-btn px-3 py-1.5 rounded-xl text-xs font-medium bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-all">
-              🏛️ 科技巨头与 ETF
-            </button>
-          </div>
-
-          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-            <div class="relative flex-1">
-              <span class="absolute inset-y-0 left-3 flex items-center text-slate-400 text-xs">🔍</span>
-              <input type="text" id="stockSearch" placeholder="输入代码或逻辑筛选 (如 NVDA, MU, HBM, 800V, 光模块)..."
-                class="w-full pl-8 pr-4 py-2 rounded-xl text-xs bg-slate-50 dark:bg-terminal-bg border border-slate-200 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-500" />
-            </div>
-            <div class="text-[11px] font-mono text-slate-400 px-1 shrink-0">
-              点击任意行切换右侧实时 K 线 →
-            </div>
-          </div>
-        </div>
-
-        <!-- Watchlist Table -->
-        <div class="overflow-hidden rounded-2xl border border-slate-200 dark:border-terminal-border bg-white dark:bg-terminal-card shadow-sm">
-          <div class="overflow-x-auto">
-            <table class="w-full text-left border-collapse">
-              <thead>
-                <tr class="border-b border-slate-200 dark:border-terminal-border text-[11px] font-mono uppercase tracking-wider text-slate-500 dark:text-slate-400 bg-slate-50/80 dark:bg-slate-800/40">
-                  <th class="py-3.5 px-4">代码 / 公司</th>
-                  <th class="py-3.5 px-3">赛道标签</th>
-                  <th class="py-3.5 px-3 text-right">最新价</th>
-                  <th class="py-3.5 px-3 text-right">涨跌幅</th>
-                  <th class="py-3.5 px-4 hidden sm:table-cell">核心催化与产业链定位</th>
-                </tr>
-              </thead>
-              <tbody id="watchlistBody" class="divide-y divide-slate-100 dark:divide-slate-800/80 text-xs sm:text-sm">
-                <!-- Populated dynamically -->
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </div>
-
-      <!-- Right/Bottom: Live TradingView Advanced Chart (5 cols on XL) -->
-      <div class="xl:col-span-5 flex flex-col">
-        <div class="p-4 rounded-2xl bg-white dark:bg-terminal-card border border-slate-200 dark:border-terminal-border shadow-sm flex-1 flex flex-col min-h-[540px]">
-          <div class="flex items-center justify-between mb-3">
-            <div class="flex items-center space-x-2">
-              <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
-              <h3 class="text-sm font-bold font-mono">实时 K 线深度图: <span id="activeChartSymbol" class="text-emerald-500">NASDAQ:NVDA</span></h3>
-            </div>
-            <div class="flex space-x-1">
-              <button data-quick="NASDAQ:QQQ" class="quick-chart-btn px-2 py-1 rounded text-[11px] font-mono bg-slate-100 dark:bg-slate-800 hover:bg-emerald-500/20 hover:text-emerald-400 transition-colors">QQQ</button>
-              <button data-quick="CBOE:VIX" class="quick-chart-btn px-2 py-1 rounded text-[11px] font-mono bg-slate-100 dark:bg-slate-800 hover:bg-emerald-500/20 hover:text-emerald-400 transition-colors">VIX</button>
-              <button data-quick="NASDAQ:NVDA" class="quick-chart-btn px-2 py-1 rounded text-[11px] font-mono bg-slate-100 dark:bg-slate-800 hover:bg-emerald-500/20 hover:text-emerald-400 transition-colors">NVDA</button>
-              <button data-quick="NASDAQ:MU" class="quick-chart-btn px-2 py-1 rounded text-[11px] font-mono bg-slate-100 dark:bg-slate-800 hover:bg-emerald-500/20 hover:text-emerald-400 transition-colors">MU</button>
+              <div class="text-[11px] font-mono-num text-slate-500 mt-0.5">${item.rangeText}</div>
             </div>
           </div>
 
-          <!-- TradingView Chart Container -->
-          <div id="tvAdvancedChart" class="flex-1 w-full rounded-xl overflow-hidden border border-slate-200/60 dark:border-slate-800 min-h-[470px]"></div>
+          <!-- 卡片底部来源与时间戳 -->
+          <div class="mt-4 pt-2.5 border-t border-white/[0.05] flex items-center justify-between text-[10px] font-mono-num text-slate-500">
+            <span class="truncate max-w-[65%]">${item.source}</span>
+            <span class="card-timestamp">${getFormattedNow()}</span>
+          </div>
         </div>
-      </div>
+      `;
+    }
 
-    </section>
+    function getFormattedNow() {
+      const d = new Date();
+      const pad = n => String(n).padStart(2, '0');
+      return `${pad(d.getMonth() + 1)}/${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+    }
 
-    <!-- Footer -->
-    <footer class="pt-4 pb-8 border-t border-slate-200/70 dark:border-slate-800/80 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-500 dark:text-slate-400 font-mono">
-      <div>JAMES INDEX // Personal US Tech & Volatility Radar · Hosted on GitHub Pages</div>
-      <div class="flex items-center space-x-4">
-        <button id="footerApiBtn" class="hover:text-emerald-500 transition-colors">配置 Finnhub Key</button>
-      </div>
-    </footer>
-
-  </main>
-
-  <script>
-    // =========================================================================
-    // 1. Core US Tech & AI Infrastructure Watchlist Data
-    // =========================================================================
-    const WATCHLIST = [
-      // AI Compute & Foundries
-      { symbol: "NVDA", tvSymbol: "NASDAQ:NVDA", name: "NVIDIA", sector: "COMPUTE", tag: "AI 算力龙头", price: 141.80, change: 2.35, thesis: "Rubin 架构迭代与主权 AI 算力资本开支核心" },
-      { symbol: "AVGO", tvSymbol: "NASDAQ:AVGO", name: "Broadcom", sector: "COMPUTE", tag: "定制 ASIC/网络", price: 178.40, change: 1.82, thesis: "北美云巨头自研 XPU 定制芯片与高速交换芯片霸主" },
-      { symbol: "MRVL", tvSymbol: "NASDAQ:MRVL", name: "Marvell Tech", sector: "COMPUTE", tag: "ASIC / DSP", price: 94.60, change: 3.12, thesis: "AWS/微软定制 AI 芯片及 1.6T 光模块 DSP 核心受益" },
-      { symbol: "AMD", tvSymbol: "NASDAQ:AMD", name: "AMD", sector: "COMPUTE", tag: "GPU 挑战者", price: 146.20, change: -0.64, thesis: "MI350/MI400 系列放量，抢占推理端性价比份额" },
-      { symbol: "TSM", tvSymbol: "NYSE:TSM", name: "TSMC 台积电", sector: "COMPUTE", tag: "先进制程/CoWoS", price: 192.50, change: 1.45, thesis: "2nm 制程与 CoWoS 先进封装产能排满，AI 卖水人" },
-      { symbol: "ORCL", tvSymbol: "NYSE:ORCL", name: "Oracle 甲骨文", sector: "COMPUTE", tag: "AI 算力云", price: 184.10, change: 0.95, thesis: "超大规模 GPU 集群租赁订单积压持续超预期" },
-
-      // Memory & HBM
-      { symbol: "MU", tvSymbol: "NASDAQ:MU", name: "Micron 美光", sector: "MEMORY", tag: "HBM4 / DRAM", price: 108.90, change: 4.18, thesis: "HBM3E/HBM4 产能售罄，AI 服务器单机存储容量翻倍" },
-      { symbol: "WDC", tvSymbol: "NASDAQ:WDC", name: "Western Digital", sector: "MEMORY", tag: "企业级 SSD", price: 68.40, change: 1.74, thesis: "AI 训练数据集扩容拉动大容量 eSSD 与冷存储需求" },
-      { symbol: "STX", tvSymbol: "NASDAQ:STX", name: "Seagate 希捷", sector: "MEMORY", tag: "HAMR 大容量盘", price: 102.30, change: 1.15, thesis: "云厂商冷数据中心 HAMR 机械硬盘周期复苏" },
-
-      // Optical & Power / 800V
-      { symbol: "COHR", tvSymbol: "NYSE:COHR", name: "Coherent", sector: "OPTICAL_POWER", tag: "800G/1.6T 光模块", price: 104.50, change: 3.65, thesis: "高速光收发器与磷化铟激光器核心供应商" },
-      { symbol: "LITE", tvSymbol: "NASDAQ:LITE", name: "Lumentum", sector: "OPTICAL_POWER", tag: "EML 光芯片", price: 89.20, change: 2.90, thesis: "数通高速 EML 光芯片供不应求，算力集群互联关键" },
-      { symbol: "TXN", tvSymbol: "NASDAQ:TXN", name: "Texas Instruments", sector: "OPTICAL_POWER", tag: "模拟电源管理", price: 201.40, change: -0.35, thesis: "数据中心 48V/800V 架构升级带动多相电源管理芯片" },
-      { symbol: "WOLF", tvSymbol: "NYSE:WOLF", name: "Wolfspeed", sector: "OPTICAL_POWER", tag: "SiC 碳化硅", price: 14.80, change: -2.10, thesis: "高压 800V 直流供电与碳化硅功率器件弹性标的" },
-      { symbol: "IREN", tvSymbol: "NASDAQ:IREN", name: "IREN Limited", sector: "OPTICAL_POWER", tag: "AI 电力数据中心", price: 13.45, change: 5.40, thesis: "稀缺高功率电网接入资源转型高密度 AI 算力托管" },
-
-      // Mega Caps & Core ETFs
-      { symbol: "QQQ", tvSymbol: "NASDAQ:QQQ", name: "Invesco QQQ", sector: "MEGA_ETF", tag: "纳指 100 ETF", price: 506.80, change: 0.78, thesis: "美股大型科技与 AI 权重风向标" },
-      { symbol: "SOXX", tvSymbol: "NASDAQ:SOXX", name: "iShares 半导体", sector: "MEGA_ETF", tag: "半导体 ETF", price: 224.60, change: 1.92, thesis: "费城半导体核心成分股一篮子追踪" },
-      { symbol: "SPY", tvSymbol: "AMEX:SPY", name: "SPDR 标普 500", sector: "MEGA_ETF", tag: "美股大盘基准", price: 596.40, change: 0.42, thesis: "美股整体风险偏好与宏观流动性基准" },
-      { symbol: "GOOGL", tvSymbol: "NASDAQ:GOOGL", name: "Alphabet", sector: "MEGA_ETF", tag: "Gemini 4 / TPU", price: 179.30, change: 1.65, thesis: "Gemini 4 登顶盲测榜首，自研 TPU v6 降本增效显著" },
-      { symbol: "MSFT", tvSymbol: "NASDAQ:MSFT", name: "Microsoft", sector: "MEGA_ETF", tag: "Azure / Copilot", price: 428.50, change: 0.55, thesis: "企业级 AI 云基础设施与商业化变现核心" },
-      { symbol: "META", tvSymbol: "NASDAQ:META", name: "Meta Platforms", sector: "MEGA_ETF", tag: "Muse / AI 广告", price: 574.20, change: 1.12, thesis: "开源大模型生态与 AI 精准广告推荐 ROI 提升" },
-      { symbol: "AAPL", tvSymbol: "NASDAQ:AAPL", name: "Apple", sector: "MEGA_ETF", tag: "端侧 AI 入口", price: 231.90, change: 0.31, thesis: "端侧智能硬件生态与防御性现金流配置" }
+    // ==================== 2. 各板块初始与实时映射数据 ====================
+    const globalMarkets = [
+      { badge: 'US', code: 'US EQUITIES', name: '美股情绪 (CNN)', subTitle: '标普500 · CNN原生情绪与Vol Panic', score: 22, mode: 'sentiment', price: 'S&P 5,942', change: '-0.42%', rangeText: 'Vol Panic 9.8/10 · 恐慌极值区', source: 'CNN / GS Desk', tvSymbol: 'FOREXCOM:SPXUSD', tag: '原生' },
+      { badge: 'CR', code: 'CRYPTO', name: '加密货币 (BTC)', subTitle: '比特币 · Alternative.me 实时情绪', score: 68, mode: 'sentiment', price: '$94,280', change: '+1.85%', rangeText: '52周区间 $52,400–$99,500', source: 'Alternative.me', tvSymbol: 'BINANCE:BTCUSDT', tag: '实时接口' },
+      { badge: 'EU', code: 'EUROPE', name: '欧洲股市', subTitle: 'STOXX 50 · 反向波动率映射', score: 46, mode: 'sentiment', price: '4,812 pts', change: '-0.31%', rangeText: 'VSTOXX 18.4 · 波动率中性偏紧', source: 'STOXX / Yahoo', tvSymbol: 'EUREX:FESX1!', tag: '反向波动率' },
+      { badge: 'IN', code: 'INDIA', name: '印度股市', subTitle: 'NIFTY 50 · India VIX 反向映射', score: 54, mode: 'sentiment', price: '24,180 pts', change: '+0.48%', rangeText: 'India VIX 14.8 · 内资承接稳健', source: 'NSE / Yahoo', tvSymbol: 'NSE:NIFTY', tag: '反向波动率' },
+      { badge: 'JP', code: 'JAPAN', name: '日本股市', subTitle: '日经225 / TOPIX · CTA空头回补观察', score: 38, mode: 'sentiment', price: '38,420 pts', change: '-0.85%', rangeText: 'Nikkei VI 24.6 · 央行加息博弈', source: 'TSE / GS Desk', tvSymbol: 'TVC:NI225', tag: '反向波动率' },
+      { badge: 'HK', code: 'HONG KONG', name: '香港股市', subTitle: '恒生指数 / 恒科 · 恒指波幅反向映射', score: 41, mode: 'sentiment', price: '19,450 pts', change: '-0.62%', rangeText: 'VHSI 23.1 · 高股息防御受捧', source: 'HKEX / Yahoo', tvSymbol: 'TVC:HSI', tag: '反向波动率' },
+      { badge: 'AU', code: 'GOLD', name: '现货黄金', subTitle: 'XAU/USD · 黄金波动率GVZ反向映射', score: 74, mode: 'sentiment', price: '$2,658/oz', change: '+0.76%', rangeText: '52周区间 $1,984–$2,790', source: 'COMEX / LBMA', tvSymbol: 'OANDA:XAUUSD', tag: '避险锚' },
+      { badge: 'CL', code: 'CRUDE OIL', name: 'WTI 原油', subTitle: '美原油期货 · OVX波动率反向映射', score: 34, mode: 'sentiment', price: '$68.90/bbl', change: '-1.14%', rangeText: '52周区间 $65.2–$87.6', source: 'NYMEX / Yahoo', tvSymbol: 'TVC:USOIL', tag: '通胀锚' }
     ];
 
-    // =========================================================================
-    // 2. State Management
-    // =========================================================================
-    let state = {
-      sector: 'ALL',
-      query: '',
-      activeSymbol: 'NASDAQ:NVDA',
-      autoRefresh: true,
-      secondsLeft: 300, // 5 minutes = 300 seconds
-      finnhubKey: localStorage.getItem('james_index_finnhub_key') || ''
-    };
+    const treasuryCurve = [
+      { badge: '10Y', code: 'US 10Y YIELD', name: '10年期美债收益率', subTitle: '全球资产定价之锚 · 52周分位', score: 72, mode: 'range', price: '4.42%', change: '+4.5 bps', rangeText: '52周区间 3.62%–4.74%', source: 'US Treasury / FRED', tvSymbol: 'TVC:US10Y', tag: '核心锚' },
+      { badge: '20Y', code: 'US 20Y YIELD', name: '20年期美债收益率', subTitle: '长久期国债利率 · 52周分位', score: 75, mode: 'range', price: '4.69%', change: '+4.1 bps', rangeText: '52周区间 3.98%–4.98%', source: 'US Treasury / FRED', tvSymbol: 'TVC:US20Y', tag: '长端利率' },
+      { badge: '30Y', code: 'US 30Y YIELD', name: '30年期美债收益率', subTitle: '超长端通胀预期 · 52周分位', score: 74, mode: 'range', price: '4.61%', change: '+3.8 bps', rangeText: '52周区间 3.94%–4.91%', source: 'US Treasury / FRED', tvSymbol: 'TVC:US30Y', tag: '超长端' },
+      { badge: 'SP', code: '30Y - 10Y SPREAD', name: '美债 30Y-10Y 期限利差', subTitle: '曲线陡峭化程度 · 52周分位', score: 58, mode: 'range', price: '+19 bps', change: '-0.7 bps', rangeText: '52周区间 -5 bps ~ +36 bps', source: 'Yield Curve Calc', tvSymbol: 'TVC:US30Y-TVC:US10Y', tag: '曲线形态' }
+    ];
 
-    // =========================================================================
-    // 3. Utility & Toast Functions
-    // =========================================================================
-    function showToast(msg, type = 'success') {
-      const toast = document.getElementById('toast');
-      const icon = document.getElementById('toastIcon');
-      const text = document.getElementById('toastMsg');
-      text.textContent = msg;
-      icon.className = type === 'error' ? 'text-rose-400 font-bold' : 'text-emerald-400 font-bold';
-      toast.classList.remove('translate-y-24', 'opacity-0');
-      clearTimeout(window.__toastTimer);
-      window.__toastTimer = setTimeout(() => {
-        toast.classList.add('translate-y-24', 'opacity-0');
-      }, 2800);
-    }
+    const megaCapCompanies = [
+      { badge: 'AA', code: 'AAPL', name: '苹果', subTitle: '苹果 · 52 周价格区间位置', score: 96, mode: 'range', price: '$355.58', change: '+0.43%', rangeText: '52 周区间 $243–$361', source: 'Yahoo / Finance', tvSymbol: 'NASDAQ:AAPL', tag: '实时' },
+      { badge: 'MS', code: 'MSFT', name: '微软', subTitle: '微软 · 52 周价格区间位置', score: 67, mode: 'range', price: '$489.93', change: '-1.25%', rangeText: '52 周区间 $349–$559', source: 'Yahoo / Finance', tvSymbol: 'NASDAQ:MSFT', tag: '实时' },
+      { badge: 'NV', code: 'NVDA', name: '英伟达', subTitle: '英伟达 · 52 周价格区间位置', score: 21, mode: 'range', price: '$149.30', change: '-3.91%', rangeText: '52 周区间 $125–$243', source: 'Yahoo / Finance', tvSymbol: 'NASDAQ:NVDA', tag: '实时' },
+      { badge: 'GO', code: 'GOOGL', name: '谷歌', subTitle: '谷歌 · 52 周价格区间位置', score: 7, mode: 'range', price: '$273.10', change: '-2.13%', rangeText: '52 周区间 $263–$409', source: 'Yahoo / Finance', tvSymbol: 'NASDAQ:GOOGL', tag: '实时' },
+      { badge: 'AM', code: 'AMZN', name: '亚马逊', subTitle: '亚马逊 · 52 周价格区间位置', score: 53, mode: 'range', price: '$244.43', change: '-3.12%', rangeText: '52 周区间 $196–$287', source: 'Yahoo / Finance', tvSymbol: 'NASDAQ:AMZN', tag: '实时' },
+      { badge: 'ME', code: 'META', name: 'Meta', subTitle: 'Meta · 52 周价格区间位置', score: 35, mode: 'range', price: '$609.89', change: '+3.40%', rangeText: '52 周区间 $520–$780', source: 'Yahoo / Finance', tvSymbol: 'NASDAQ:META', tag: '实时' },
+      { badge: 'TS', code: 'TSLA', name: '特斯拉', subTitle: '特斯拉 · 52 周价格区间位置', score: 41, mode: 'range', price: '$380.14', change: '-1.18%', rangeText: '52 周区间 $297–$499', source: 'Yahoo / Finance', tvSymbol: 'NASDAQ:TSLA', tag: '实时' },
+      { badge: 'TS', code: 'TSM', name: '台积电', subTitle: '台积电 · 52 周价格区间位置', score: 32, mode: 'range', price: '$342.34', change: '-1.96%', rangeText: '52 周区间 $275–$487', source: 'Yahoo / Finance', tvSymbol: 'NYSE:TSM', tag: '实时' }
+    ];
 
-    function updateClocks() {
-      const now = new Date();
+    const semiSupplyChain = [
+      // 费半与韩系存储先导
+      { cat: 'index-memory', badge: 'SOX', code: 'SOX 费城半导体', name: '费城半导体指数', subTitle: '美股芯片总风向标 · 52周区间', score: 44, mode: 'range', price: '4,985.20', change: '-1.64%', rangeText: '52 周区间 4,120–5,930', source: 'PHLX / Nasdaq', tvSymbol: 'NASDAQ:SOX', tag: '核心基准' },
+      { cat: 'index-memory', badge: 'KR', code: '000660 SK海力士', name: 'SK Hynix (HBM龙头)', subTitle: '费半先行指标 · 韩国KRX 52周区间', score: 48, mode: 'range', price: '₩176,400', change: '-2.10%', rangeText: '52 周区间 ₩141,000–₩241,000', source: 'KRX / Seoul', tvSymbol: 'KRX:000660', tag: 'HBM先导' },
+      { cat: 'index-memory', badge: 'KR', code: '005930 三星电子', name: 'Samsung Electronics', subTitle: '韩股权重核心 · 韩国KRX 52周区间', score: 18, mode: 'range', price: '₩56,200', change: '-1.40%', rangeText: '52 周区间 ₩49,900–₩88,800', source: 'KRX / Seoul', tvSymbol: 'KRX:005930', tag: '存储周期' },
+      { cat: 'index-memory', badge: 'MU', code: 'MU 美光科技', name: 'Micron Technology', subTitle: '美股HBM/DRAM映射 · 52周区间', score: 36, mode: 'range', price: '$102.45', change: '-2.35%', rangeText: '52 周区间 $84.1–$157.5', source: 'NASDAQ / Yahoo', tvSymbol: 'NASDAQ:MU', tag: '美股存储' },
+
+      // AI 算力与定制 ASIC
+      { cat: 'asic', badge: 'AV', code: 'AVGO 博通', name: 'Broadcom (ASIC/网络)', subTitle: '定制AI芯片双雄 · 52周区间', score: 62, mode: 'range', price: '$168.90', change: '-0.88%', rangeText: '52 周区间 $118.0–$186.4', source: 'NASDAQ / Yahoo', tvSymbol: 'NASDAQ:AVGO', tag: 'ASIC龙头' },
+      { cat: 'asic', badge: 'MR', code: 'MRVL 迈威尔', name: 'Marvell Technology', subTitle: '定制ASIC与DSP · 52周区间', score: 71, mode: 'range', price: '$91.20', change: '+1.12%', rangeText: '52 周区间 $53.2–$99.8', source: 'NASDAQ / Yahoo', tvSymbol: 'NASDAQ:MRVL', tag: 'ASIC/光DSP' },
+      { cat: 'asic', badge: 'AM', code: 'AMD 超威半导体', name: 'AMD (MI300/服务器)', subTitle: 'GPU第二极 · 52周区间', score: 29, mode: 'range', price: '$138.60', change: '-1.75%', rangeText: '52 周区间 $121.8–$227.3', source: 'NASDAQ / Yahoo', tvSymbol: 'NASDAQ:AMD', tag: '算力芯片' },
+      { cat: 'asic', badge: 'AS', code: 'ASML 阿斯麦', name: 'ASML Holding', subTitle: 'EUV光刻机垄断 · 52周区间', score: 24, mode: 'range', price: '$688.50', change: '-1.15%', rangeText: '52 周区间 $645.0–$1,110', source: 'NASDAQ / Yahoo', tvSymbol: 'NASDAQ:ASML', tag: '上游设备' },
+
+      // 光互连与 800V 供电散热
+      { cat: 'optical-power', badge: 'CO', code: 'COHR 高意', name: 'Coherent (800G/1.6T)', subTitle: '光模块与激光器 · 52周区间', score: 82, mode: 'range', price: '$101.40', change: '+1.95%', rangeText: '52 周区间 $44.5–$112.0', source: 'NYSE / Yahoo', tvSymbol: 'NYSE:COHR', tag: '光互连' },
+      { cat: 'optical-power', badge: 'LI', code: 'LITE 鲁门特姆', name: 'Lumentum Holdings', subTitle: 'EML光芯片核心 · 52周区间', score: 79, mode: 'range', price: '$86.30', change: '+2.40%', rangeText: '52 周区间 $41.2–$96.5', source: 'NASDAQ / Yahoo', tvSymbol: 'NASDAQ:LITE', tag: '光芯片' },
+      { cat: 'optical-power', badge: 'VR', code: 'VRT 维谛技术', name: 'Vertiv Holdings', subTitle: '液冷与800V数据中心供电 · 52周', score: 85, mode: 'range', price: '$124.80', change: '+0.65%', rangeText: '52 周区间 $46.8–$138.9', source: 'NYSE / Yahoo', tvSymbol: 'NYSE:VRT', tag: '液冷/供电' },
+      { cat: 'optical-power', badge: 'WF', code: 'WOLF 碳化硅', name: 'Wolfspeed (SiC功率)', subTitle: '800V宽禁带半导体 · 52周区间', score: 15, mode: 'range', price: '$11.85', change: '-3.10%', rangeText: '52 周区间 $7.80–$35.4', source: 'NYSE / Yahoo', tvSymbol: 'NYSE:WOLF', tag: 'SiC材料' }
+    ];
+
+    // ==================== 3. 实时接口拉取与渲染逻辑 ====================
+    let currentSemiCat = 'all';
+
+    async function fetchLiveCryptoFearGreed() {
       try {
-        const estTime = now.toLocaleTimeString('en-US', {
-          timeZone: 'America/New_York',
-          hour12: false,
-          hour: '2-digit',
-          minute: '2-digit',
-          second: '2-digit'
-        });
-        document.getElementById('estClock').textContent = `NY/EST ${estTime}`;
+        const res = await fetch('https://api.alternative.me/fng/?limit=1');
+        const json = await res.json();
+        if (json && json.data && json.data[0]) {
+          const val = parseInt(json.data[0].value, 10);
+          globalMarkets[1].score = val;
+          globalMarkets[1].rangeText = `实时情绪评级: ${json.data[0].value_classification} · Alternative.me`;
+        }
       } catch (e) {
-        document.getElementById('estClock').textContent = now.toTimeString().slice(0, 8);
+        console.warn('Alternative.me 接口暂不可达，使用快照基准值', e);
       }
     }
 
-    // =========================================================================
-    // 4. Live Data Fetching Engine (CNN Fear & Greed + Optional Finnhub)
-    // =========================================================================
-    async function fetchFearAndGreed() {
-      const badge = document.getElementById('fgSourceBadge');
+    async function fetchLiveBTCSpot() {
       try {
-        // CNN Fear & Greed public visualization endpoint
-        const res = await fetch('https://production.dataviz.cnn.io/index/fearandgreed/graphdata', {
-          cache: 'no-store'
-        });
-        if (!res.ok) throw new Error('CNN endpoint unavailable');
+        const res = await fetch('https://api.binance.com/api/v3/ticker/24hr?symbol=BTCUSDT');
         const data = await res.json();
-        const fg = data?.fear_and_greed;
-        if (fg && typeof fg.score === 'number') {
-          const score = Math.round(fg.score);
-          renderFearAndGreedGauge(
-            score,
-            fg.rating || getRatingLabel(score),
-            Math.round(fg.previous_close || score),
-            Math.round(fg.previous_1_week || score),
-            Math.round(fg.previous_1_month || score)
-          );
-          badge.textContent = 'LIVE CNN';
-          badge.className = 'px-2 py-0.5 rounded text-[10px] font-mono font-semibold bg-emerald-500/15 text-emerald-500 border border-emerald-500/25';
-          return;
+        if (data && data.lastPrice) {
+          const price = parseFloat(data.lastPrice).toLocaleString('en-US', { maximumFractionDigits: 0 });
+          const pct = parseFloat(data.priceChangePercent);
+          globalMarkets[1].price = `$${price}`;
+          globalMarkets[1].change = `${pct >= 0 ? '+' : ''}${pct.toFixed(2)}%`;
         }
-      } catch (err) {
-        // Graceful fallback to institutional panic desk snapshot if CORS blocks direct browser call
-        badge.textContent = 'DESK SNAPSHOT';
-        badge.className = 'px-2 py-0.5 rounded text-[10px] font-mono font-semibold bg-amber-500/15 text-amber-500 border border-amber-500/25';
-        renderFearAndGreedGauge(18, 'EXTREME FEAR · 极度恐慌', 21, 34, 58);
+      } catch (e) {
+        console.warn('Binance 行情接口暂不可达，保留默认显示', e);
       }
     }
 
-    function getRatingLabel(score) {
-      if (score <= 25) return 'EXTREME FEAR · 极度恐慌';
-      if (score <= 45) return 'FEAR · 恐慌';
-      if (score <= 55) return 'NEUTRAL · 中性';
-      if (score <= 75) return 'GREED · 贪婪';
-      return 'EXTREME GREED · 极度贪婪';
+    function renderAllGrids() {
+      document.getElementById('grid-global').innerHTML = globalMarkets.map((item, i) => buildCardHTML(item, i, 'glb')).join('');
+      document.getElementById('grid-treasury').innerHTML = treasuryCurve.map((item, i) => buildCardHTML(item, i, 'tsy')).join('');
+      document.getElementById('grid-megacap').innerHTML = megaCapCompanies.map((item, i) => buildCardHTML(item, i, 'meg')).join('');
+
+      const filteredSemi = currentSemiCat === 'all'
+        ? semiSupplyChain
+        : semiSupplyChain.filter(x => x.cat === currentSemiCat);
+      document.getElementById('grid-semi').innerHTML = filteredSemi.map((item, i) => buildCardHTML(item, i, 'sem')).join('');
     }
 
-    function renderFearAndGreedGauge(score, ratingText, prevClose, prevWeek, prevMonth) {
-      const clamped = Math.max(0, Math.min(100, score));
-      // Arc total length = 283; 0 -> offset 283, 100 -> offset 0
-      const offset = 283 - (clamped / 100) * 283;
-      // Needle rotation: -90deg (0) to +90deg (100)
-      const angle = -90 + (clamped / 100) * 180;
-
-      document.getElementById('fgArc').setAttribute('stroke-dashoffset', offset.toFixed(1));
-      document.getElementById('fgNeedle').setAttribute('transform', `rotate(${angle.toFixed(1)} 110 110)`);
-
-      const scoreEl = document.getElementById('fgScore');
-      const ratingEl = document.getElementById('fgRating');
-      scoreEl.textContent = clamped;
-      ratingEl.textContent = ratingText.toUpperCase();
-
-      if (clamped <= 25) {
-        scoreEl.className = 'text-3xl font-mono font-extrabold tracking-tight text-rose-500';
-        ratingEl.className = 'text-xs font-bold uppercase tracking-wider text-rose-400 mt-0.5';
-      } else if (clamped <= 45) {
-        scoreEl.className = 'text-3xl font-mono font-extrabold tracking-tight text-orange-500';
-        ratingEl.className = 'text-xs font-bold uppercase tracking-wider text-orange-400 mt-0.5';
-      } else if (clamped <= 55) {
-        scoreEl.className = 'text-3xl font-mono font-extrabold tracking-tight text-amber-500';
-        ratingEl.className = 'text-xs font-bold uppercase tracking-wider text-amber-400 mt-0.5';
-      } else {
-        scoreEl.className = 'text-3xl font-mono font-extrabold tracking-tight text-emerald-500';
-        ratingEl.className = 'text-xs font-bold uppercase tracking-wider text-emerald-400 mt-0.5';
-      }
-
-      document.getElementById('fgPrevClose').textContent = `${prevClose}`;
-      document.getElementById('fgPrevWeek').textContent = `${prevWeek}`;
-      document.getElementById('fgPrevMonth').textContent = `${prevMonth}`;
-    }
-
-    async function fetchFinnhubQuotesIfConfigured() {
-      if (!state.finnhubKey) return;
-      // Fetch top priority tickers within free rate limits (60 calls/min)
-      const priorityTickers = WATCHLIST.slice(0, 15);
-      await Promise.allSettled(priorityTickers.map(async (item) => {
-        try {
-          const url = `https://finnhub.io/api/v1/quote?symbol=${encodeURIComponent(item.symbol)}&token=${encodeURIComponent(state.finnhubKey)}`;
-          const res = await fetch(url);
-          if (!res.ok) return;
-          const q = await res.json();
-          if (q && typeof q.c === 'number' && q.c > 0) {
-            item.price = q.c;
-            item.change = typeof q.dp === 'number' ? q.dp : item.change;
-            item.isLive = true;
-          }
-        } catch (e) {
-          // Ignore individual ticker failure
-        }
-      }));
-    }
-
-    async function runFullRefresh(isManual = false) {
-      const btn = document.getElementById('manualRefreshBtn');
-      btn.textContent = '↻ 同步中...';
-      await Promise.all([
-        fetchFearAndGreed(),
-        fetchFinnhubQuotesIfConfigured()
-      ]);
-      renderWatchlist();
-
-      const nowStr = new Date().toLocaleTimeString('zh-CN', { hour12: false });
-      document.getElementById('lastUpdatedText').textContent = `上次更新: ${nowStr}`;
-      btn.textContent = '↻ 刷新';
-      state.secondsLeft = 300;
-      if (isManual) {
-        showToast(state.finnhubKey ? '已同步实时美股报价与恐慌指数' : '已刷新恐慌指数与盘面快照');
-      }
-    }
-
-    // =========================================================================
-    // 5. Watchlist Table Rendering
-    // =========================================================================
-    function renderWatchlist() {
-      const tbody = document.getElementById('watchlistBody');
-      const q = state.query.trim().toLowerCase();
-
-      const filtered = WATCHLIST.filter(item => {
-        const matchSector = state.sector === 'ALL' || item.sector === state.sector;
-        const matchQuery = !q ||
-          item.symbol.toLowerCase().includes(q) ||
-          item.name.toLowerCase().includes(q) ||
-          item.tag.toLowerCase().includes(q) ||
-          item.thesis.toLowerCase().includes(q);
-        return matchSector && matchQuery;
-      });
-
-      if (filtered.length === 0) {
-        tbody.innerHTML = `
-          <tr>
-            <td colspan="5" class="py-10 text-center text-xs text-slate-400">
-              未找到匹配的股票或赛道关键词，请尝试清除筛选条件。
-            </td>
-          </tr>
-        `;
-        return;
-      }
-
-      tbody.innerHTML = filtered.map(item => {
-        const isPos = item.change >= 0;
-        const changeColor = isPos ? 'text-emerald-500' : 'text-rose-500';
-        const changeBg = isPos ? 'bg-emerald-500/10 border-emerald-500/20' : 'bg-rose-500/10 border-rose-500/20';
-        const sign = isPos ? '+' : '';
-        const isSelected = state.activeSymbol === item.tvSymbol;
-        const rowHighlight = isSelected
-          ? 'bg-emerald-500/10 dark:bg-emerald-500/10 border-l-2 border-l-emerald-500'
-          : 'hover:bg-slate-50 dark:hover:bg-slate-800/45';
-
-        return `
-          <tr data-tv="${item.tvSymbol}" class="stock-row cursor-pointer transition-colors ${rowHighlight}">
-            <td class="py-3 px-4 whitespace-nowrap">
-              <div class="flex items-center space-x-2">
-                <span class="font-mono font-extrabold text-slate-900 dark:text-white">${item.symbol}</span>
-                ${item.isLive ? '<span class="w-1.5 h-1.5 rounded-full bg-emerald-500" title="Finnhub 实时报价"></span>' : ''}
-              </div>
-              <div class="text-[11px] text-slate-400 truncate max-w-[110px]">${item.name}</div>
-            </td>
-            <td class="py-3 px-3 whitespace-nowrap">
-              <span class="px-2 py-0.5 rounded-md text-[11px] font-medium bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200/70 dark:border-slate-700">
-                ${item.tag}
-              </span>
-            </td>
-            <td class="py-3 px-3 text-right font-mono font-bold text-slate-800 dark:text-slate-100 whitespace-nowrap">
-              $${item.price.toFixed(2)}
-            </td>
-            <td class="py-3 px-3 text-right font-mono font-bold whitespace-nowrap">
-              <span class="inline-block px-2 py-0.5 rounded-md text-xs border ${changeBg} ${changeColor}">
-                ${sign}${item.change.toFixed(2)}%
-              </span>
-            </td>
-            <td class="py-3 px-4 text-xs text-slate-500 dark:text-slate-400 hidden sm:table-cell leading-relaxed">
-              ${item.thesis}
-            </td>
-          </tr>
-        `;
-      }).join('');
-
-      document.querySelectorAll('.stock-row').forEach(row => {
-        row.addEventListener('click', () => {
-          const tvSym = row.dataset.tv;
-          if (tvSym && tvSym !== state.activeSymbol) {
-            state.activeSymbol = tvSym;
-            renderWatchlist();
-            loadTradingViewChart(tvSym);
-          }
+    // 分类切换
+    document.querySelectorAll('.semi-tab').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.semi-tab').forEach(b => {
+          b.className = 'semi-tab px-3.5 py-1.5 rounded-lg text-xs font-medium bg-white/[0.04] text-slate-300 border border-white/[0.08] hover:bg-white/[0.08]';
         });
+        btn.className = 'semi-tab active px-3.5 py-1.5 rounded-lg text-xs font-medium bg-emerald-500/20 text-emerald-300 border border-emerald-500/40';
+        currentSemiCat = btn.dataset.cat;
+        renderAllGrids();
+      });
+    });
+
+    // ==================== 4. 可折叠模块控制 ====================
+    function toggleSection(secId) {
+      const el = document.getElementById(secId);
+      if (el) el.classList.toggle('section-collapsed');
+    }
+
+    function toggleAllSections(expand) {
+      document.querySelectorAll('main > section').forEach(sec => {
+        if (expand) {
+          sec.classList.remove('section-collapsed');
+        } else {
+          sec.classList.add('section-collapsed');
+        }
       });
     }
 
-    // =========================================================================
-    // 6. TradingView Live Widgets (Ticker Tape, Macro Overview & Main Chart)
-    // =========================================================================
-    function getCurrentTheme() {
-      return document.documentElement.classList.contains('dark') ? 'dark' : 'light';
-    }
-
-    function loadTradingViewTickerTape() {
-      const container = document.getElementById('tvTickerTape');
-      container.innerHTML = '<div class="tradingview-widget-container__widget"></div>';
-      const script = document.createElement('script');
-      script.type = 'text/javascript';
-      script.src = 'https://s3.tradingview.com/external-embedding/embed-widget-ticker-tape.js';
-      script.async = true;
-      script.text = JSON.stringify({
-        symbols: [
-          { proName: "FOREXCOM:SPXUSD", title: "S&P 500" },
-          { proName: "FOREXCOM:NSXUSD", title: "US 100" },
-          { description: "CBOE VIX 恐慌", proName: "CBOE:VIX" },
-          { description: "NVDA", proName: "NASDAQ:NVDA" },
-          { description: "AVGO", proName: "NASDAQ:AVGO" },
-          { description: "MU 美光", proName: "NASDAQ:MU" },
-          { description: "TSM 台积电", proName: "NYSE:TSM" },
-          { description: "COHR 光模块", proName: "NYSE:COHR" },
-          { description: "US 10Y 美债", proName: "TVC:US10Y" }
-        ],
-        showSymbolLogo: true,
-        isTransparent: true,
-        displayMode: "adaptive",
-        colorTheme: getCurrentTheme(),
-        locale: "zh_CN"
-      });
-      container.appendChild(script);
-    }
-
-    function loadTradingViewMacroWidget() {
-      const container = document.getElementById('tvMiniIndices');
-      container.innerHTML = '<div class="tradingview-widget-container__widget"></div>';
-      const script = document.createElement('script');
-      script.type = 'text/javascript';
-      script.src = 'https://s3.tradingview.com/external-embedding/embed-widget-market-overview.js';
-      script.async = true;
-      script.text = JSON.stringify({
-        colorTheme: getCurrentTheme(),
-        dateRange: "1D",
-        showChart: false,
-        locale: "zh_CN",
-        width: "100%",
-        height: "100%",
-        isTransparent: true,
-        showSymbolLogo: true,
-        tabs: [
-          {
-            title: "核心指数与波动率",
-            symbols: [
-              { s: "CBOE:VIX", d: "CBOE VIX 恐慌指数" },
-              { s: "NASDAQ:QQQ", d: "纳斯达克 100 ETF" },
-              { s: "NASDAQ:SOXX", d: "费城半导体 ETF" },
-              { s: "TVC:US10Y", d: "美国 10 年期国债收益率" },
-              { s: "TVC:DXY", d: "美元指数 DXY" }
-            ]
-          }
-        ]
-      });
-      container.appendChild(script);
-    }
-
-    function loadTradingViewChart(tvSymbol) {
-      document.getElementById('activeChartSymbol').textContent = tvSymbol;
-      const container = document.getElementById('tvAdvancedChart');
-      container.innerHTML = '<div class="tradingview-widget-container__widget" style="height:100%;width:100%"></div>';
-      const script = document.createElement('script');
-      script.type = 'text/javascript';
-      script.src = 'https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js';
-      script.async = true;
-      script.text = JSON.stringify({
-        autosize: true,
-        symbol: tvSymbol,
-        interval: "15",
-        timezone: "America/New_York",
-        theme: getCurrentTheme(),
-        style: "1",
-        locale: "zh_CN",
-        enable_publishing: false,
-        hide_top_toolbar: false,
-        hide_legend: false,
-        save_image: false,
-        calendar: false,
-        support_host: "https://www.tradingview.com"
-      });
-      container.appendChild(script);
-    }
-
-    function reloadAllTradingViewWidgets() {
-      loadTradingViewTickerTape();
-      loadTradingViewMacroWidget();
-      loadTradingViewChart(state.activeSymbol);
-    }
-
-    // =========================================================================
-    // 7. 5-Minute Countdown & Event Listeners
-    // =========================================================================
-    setInterval(() => {
-      updateClocks();
-      if (!state.autoRefresh) return;
-      state.secondsLeft -= 1;
-      if (state.secondsLeft <= 0) {
-        runFullRefresh(false);
+    // ==================== 5. 点击卡片联动 TradingView K线 ====================
+    function loadTradingViewWidget(symbol) {
+      const container = document.getElementById('tvChartContainer');
+      container.innerHTML = '';
+      if (typeof TradingView !== 'undefined') {
+        new TradingView.widget({
+          autosize: true,
+          symbol: symbol,
+          interval: "D",
+          timezone: "Asia/Shanghai",
+          theme: "dark",
+          style: "1",
+          locale: "zh_CN",
+          toolbar_bg: "#0d1322",
+          enable_publishing: false,
+          hide_side_toolbar: false,
+          allow_symbol_change: true,
+          container_id: "tvChartContainer"
+        });
       }
-      const mins = String(Math.floor(state.secondsLeft / 60)).padStart(2, '0');
-      const secs = String(state.secondsLeft % 60).padStart(2, '0');
-      document.getElementById('countdownTimer').textContent = `${mins}:${secs}`;
+    }
+
+    function openSymbolChart(tvSymbol, title) {
+      const chartSec = document.getElementById('sec-chart');
+      chartSec.classList.remove('section-collapsed');
+      document.getElementById('activeChartLabel').textContent = `当前标的：${title} (${tvSymbol})`;
+      loadTradingViewWidget(tvSymbol);
+      chartSec.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+
+    // ==================== 6. 每 5 分钟自动刷新计时器 ====================
+    let secondsLeft = 300; // 5分钟 = 300秒
+
+    async function refreshAllData(manual = false) {
+      const spinner = document.getElementById('refreshSpinner');
+      if (spinner) spinner.classList.add('animate-spin');
+
+      await Promise.all([
+        fetchLiveCryptoFearGreed(),
+        fetchLiveBTCSpot()
+      ]);
+
+      renderAllGrids();
+      secondsLeft = 300;
+
+      setTimeout(() => {
+        if (spinner) spinner.classList.remove('animate-spin');
+      }, 600);
+    }
+
+    setInterval(() => {
+      secondsLeft--;
+      if (secondsLeft <= 0) {
+        refreshAllData(false);
+      }
+      const m = String(Math.floor(secondsLeft / 60)).padStart(2, '0');
+      const s = String(secondsLeft % 60).padStart(2, '0');
+      const timerEl = document.getElementById('countdownTimer');
+      if (timerEl) timerEl.textContent = `${m}:${s}`;
     }, 1000);
 
-    document.getElementById('toggleAutoRefresh').addEventListener('click', () => {
-      state.autoRefresh = !state.autoRefresh;
-      const dot = document.getElementById('autoStatusDot');
-      const label = document.getElementById('toggleAutoRefresh');
-      if (state.autoRefresh) {
-        dot.className = 'w-2 h-2 rounded-full bg-emerald-500';
-        label.className = 'flex items-center space-x-1.5 text-xs font-mono font-semibold text-emerald-600 dark:text-emerald-400';
-        showToast('已开启每 5 分钟自动刷新');
-      } else {
-        dot.className = 'w-2 h-2 rounded-full bg-amber-500';
-        label.className = 'flex items-center space-x-1.5 text-xs font-mono font-semibold text-amber-500';
-        showToast('已暂停自动刷新倒计时');
-      }
-    });
-
-    document.getElementById('manualRefreshBtn').addEventListener('click', () => {
-      runFullRefresh(true);
-    });
-
-    // Sector Buttons
-    document.querySelectorAll('.sector-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        document.querySelectorAll('.sector-btn').forEach(b => {
-          b.className = 'sector-btn px-3 py-1.5 rounded-xl text-xs font-medium bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-all';
-        });
-        btn.className = 'sector-btn px-3 py-1.5 rounded-xl text-xs font-semibold bg-emerald-600 text-white shadow-sm transition-all';
-        state.sector = btn.dataset.sector;
-        renderWatchlist();
-      });
-    });
-
-    // Search Filter
-    document.getElementById('stockSearch').addEventListener('input', (e) => {
-      state.query = e.target.value;
-      renderWatchlist();
-    });
-
-    // Quick Chart Switcher Buttons
-    document.querySelectorAll('.quick-chart-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const sym = btn.dataset.quick;
-        state.activeSymbol = sym;
-        renderWatchlist();
-        loadTradingViewChart(sym);
-      });
-    });
-
-    // Theme Toggle
-    document.getElementById('themeToggle').addEventListener('click', () => {
-      const isDark = document.documentElement.classList.toggle('dark');
-      document.getElementById('themeIcon').textContent = isDark ? '☀️' : '🌙';
-      reloadAllTradingViewWidgets();
-    });
-
-    // Finnhub Modal Handlers
-    const apiModal = document.getElementById('apiModal');
-    function openApiModal() {
-      document.getElementById('finnhubKeyInput').value = state.finnhubKey;
-      apiModal.classList.remove('hidden');
-      apiModal.classList.add('flex');
-    }
-    document.getElementById('openApiModalBtn').addEventListener('click', openApiModal);
-    document.getElementById('footerApiBtn').addEventListener('click', openApiModal);
-    document.getElementById('closeApiModal').addEventListener('click', () => {
-      apiModal.classList.add('hidden');
-      apiModal.classList.remove('flex');
-    });
-    document.getElementById('saveApiKeyBtn').addEventListener('click', () => {
-      const val = document.getElementById('finnhubKeyInput').value.trim();
-      state.finnhubKey = val;
-      localStorage.setItem('james_index_finnhub_key', val);
-      apiModal.classList.add('hidden');
-      apiModal.classList.remove('flex');
-      runFullRefresh(true);
-    });
-    document.getElementById('clearApiKeyBtn').addEventListener('click', () => {
-      state.finnhubKey = '';
-      localStorage.removeItem('james_index_finnhub_key');
-      document.getElementById('finnhubKeyInput').value = '';
-      apiModal.classList.add('hidden');
-      apiModal.classList.remove('flex');
-      showToast('已清除 Finnhub Key');
-    });
-
-    // =========================================================================
-    // 8. Boot Sequence
-    // =========================================================================
-    window.addEventListener('load', () => {
-      updateClocks();
-      renderWatchlist();
-      reloadAllTradingViewWidgets();
-      runFullRefresh(false);
+    // 初始化启动
+    window.addEventListener('DOMContentLoaded', () => {
+      refreshAllData(false);
+      loadTradingViewWidget('NASDAQ:NVDA');
     });
   </script>
 </body>
