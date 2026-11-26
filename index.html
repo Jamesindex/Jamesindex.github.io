@@ -1,0 +1,1777 @@
+<!DOCTYPE html>
+<html lang="zh-CN" class="dark"><head><script data-bard-client-injected="true">(function(firebaseConfig, initialAuthToken, appId) {
+        window.__firebase_config = firebaseConfig;
+        window.__initial_auth_token = initialAuthToken;
+        window.__app_id = appId;
+            })("\n{\n  \"apiKey\": \"AIzaSyCqyCcs2R2e7AegGjvFAwG98wlamtbHvZY\",\n  \"authDomain\": \"bard-frontend.firebaseapp.com\",\n  \"projectId\": \"bard-frontend\",\n  \"storageBucket\": \"bard-frontend.firebasestorage.app\",\n  \"messagingSenderId\": \"175205271074\",\n  \"appId\": \"1:175205271074:web:2b7bd4d34d33bf38e6ec7b\"\n}\n","eyJhbGciOiJSUzI1NiIsImtpZCI6IjExNjRiNzdiNDMzZDdhMDAyMWI4NjE4YjhjYTU3ZTMyZGI5MWUxMTMiLCJ0eXAiOiJKV1QifQ.eyJzdWIiOiJmaXJlYmFzZS1hZG1pbnNkay1mYnN2Y0BiYXJkLWZyb250ZW5kLmlhbS5nc2VydmljZWFjY291bnQuY29tIiwiYXVkIjoiaHR0cHM6Ly9pZGVudGl0eXRvb2xraXQuZ29vZ2xlYXBpcy5jb20vZ29vZ2xlLmlkZW50aXR5LmlkZW50aXR5dG9vbGtpdC52MS5JZGVudGl0eVRvb2xraXQiLCJ1aWQiOiIwNDY4NDAzNzczODU4MTA2MjA5MiIsImlzcyI6ImZpcmViYXNlLWFkbWluc2RrLWZic3ZjQGJhcmQtZnJvbnRlbmQuaWFtLmdzZXJ2aWNlYWNjb3VudC5jb20iLCJjbGFpbXMiOnsiYXBwSWQiOiJjXzk4M2FlZmQ5NTM2NDFlMGFfaW5kZXguaHRtbC00MjgifSwiZXhwIjoxNzk1Njc2NDgxLCJpYXQiOjE3OTU2NzI4ODEsImFsZyI6IlJTMjU2In0.E7_ooHOh-4Gcgwk0k1H8vE-xnclMAC7Zkw8tjKNyJ8iCdOdFKV2-XrR6y8wdoBCtmt7_d0jBXbVPObapG_YUU0tFPrpRCdbrYKu685CC4E4HB_kpSF_2r9kEXlGuEXu-dG-nAROoYhUNtyq4eY5pC2ka1QDDFJ4Ggppl-dxDVfG0KIFnOHl-ijwd9EpuaEOM2uv-hSfW46Ordd04jzTWdpM774tGK0qom99thPPcZNOAqo49N5L3CQFJiS0RrOFnx7kTkIJcDEV1QBXPHjJEMk0HkqybrWf61wYFg4Dr5H0oLXRD_7Ybt-BMbiU1aHtWKSl-KBg1kOeJmBXJ82wemw","c_983aefd953641e0a_index.html-428")</script><script data-bard-client-injected="true">
+  document.addEventListener('input', (event) => {
+    if (event.target && (event.target.isContentEditable || event.target.hasAttribute('contenteditable'))) {
+      const clonedDoc = document.cloneNode(true);
+      const injectedScripts = clonedDoc.querySelectorAll('[data-bard-client-injected="true"]');
+      injectedScripts.forEach(el => el.remove());
+      window.parent.postMessage({
+        type: 'inlineEdit',
+        html: '<!DOCTYPE html>\n' + clonedDoc.documentElement.outerHTML
+      }, '*');
+    }
+  });
+</script><script data-bard-client-injected="true">(function(){'use strict';window.addEventListener("message",a=>{a.data&&a.data.type==="SUPPLEMENTAL_DATA_UPDATE"&&window.dispatchEvent(new CustomEvent("supplementaldataupdate",{detail:a.data.data}))});}).call(this);
+</script><script data-bard-client-injected="true">(function() {
+  const SCROLL_KEYS = new Set([
+    'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight',
+    ' ', 'Spacebar', 'PageUp', 'PageDown', 'Home', 'End',
+  ]);
+  const HORIZONTAL_KEYS = new Set(['ArrowLeft', 'ArrowRight']);
+
+  function isTextEntryTarget(target) {
+    if (!target) return false;
+    const tagName = target.tagName;
+    return tagName === 'INPUT' || tagName === 'TEXTAREA' ||
+        tagName === 'SELECT' || target.isContentEditable === true;
+  }
+
+  // An element absorbs the key only if it both overflows on the axis being
+  // scrolled and is configured to scroll on that axis. The cheap dimension
+  // test runs first because getComputedStyle forces a style recalc, and this
+  // runs on every keypress. Each axis is read from its own longhand: the
+  // 'overflow' shorthand serializes as two values when the axes differ, which
+  // is the common 'overflow-x: hidden; overflow-y: auto' pane.
+  function canScroll(node, horizontal) {
+    const overflows = horizontal ? node.scrollWidth > node.clientWidth
+                                 : node.scrollHeight > node.clientHeight;
+    if (!overflows) return false;
+    const style = window.getComputedStyle(node);
+    const overflow = horizontal ? style.overflowX : style.overflowY;
+    return overflow === 'auto' || overflow === 'scroll';
+  }
+
+  // Walks up from the event target so nested scrollers keep their behavior.
+  // <body> is included because pages that pin the root height make it the
+  // scroll container.
+  function hasScrollableAncestor(target, horizontal) {
+    let node = target;
+    while (node && node !== document.documentElement) {
+      if (canScroll(node, horizontal)) return true;
+      node = node.parentElement;
+    }
+    return false;
+  }
+
+  function rootCanScroll(horizontal) {
+    const scroller = document.scrollingElement || document.documentElement;
+    if (!scroller) return false;
+    // Tolerate a pixel of rounding so subpixel layouts do not look scrollable.
+    return horizontal ? scroller.scrollWidth > window.innerWidth + 1
+                      : scroller.scrollHeight > window.innerHeight + 1;
+  }
+
+  window.addEventListener('keydown', function(event) {
+    if (!SCROLL_KEYS.has(event.key)) return;
+    if (event.defaultPrevented) return;
+    // Alt and Meta turn arrows into browser history navigation, and Ctrl is
+    // reserved for shortcuts, so none of them are scroll intent.
+    if (event.altKey || event.metaKey || event.ctrlKey) return;
+
+    const target = event.target;
+    if (isTextEntryTarget(target)) return;
+
+    // Anything that can still absorb the scroll gets to keep it.
+    const horizontal = HORIZONTAL_KEYS.has(event.key);
+    if (rootCanScroll(horizontal)) return;
+    if (hasScrollableAncestor(target, horizontal)) return;
+
+    event.preventDefault();
+  }, {capture: true, passive: false});
+})();</script><script data-bard-client-injected="true">(function() {
+  // Ensure this script is executed only once
+  if (window.firebaseAuthBridgeScriptLoaded) {
+    return;
+  }
+  window.firebaseAuthBridgeScriptLoaded = true;
+
+  let nextTokenPromiseId = 0;
+
+  // Stores { resolve, reject } for ongoing token requests
+  const pendingTokenPromises = {};
+
+  // Listen for messages from the Host Application
+  window.addEventListener('message', function(event) {
+
+    const messageData = event.data;
+
+  if (messageData && messageData.type === 'RESOLVE_NEW_FIREBASE_TOKEN') {
+      const { success, token, error, promiseId } = messageData ?? {};
+      if (pendingTokenPromises[promiseId]) {
+        if (success) {
+          pendingTokenPromises[promiseId].resolve(token);
+        } else {
+          pendingTokenPromises[promiseId].reject(new Error(error || 'Token refresh failed from host.'));
+        }
+        delete pendingTokenPromises[promiseId];
+      }
+    }
+  });
+
+  // Expose a function for the Generated App to request a new Firebase token
+  window.requestNewFirebaseToken = function() {
+    const currentPromiseId = nextTokenPromiseId++;
+    const promise = new Promise((resolve, reject) => {
+      pendingTokenPromises[currentPromiseId] = { resolve, reject };
+    });
+    if (window.parent && window.parent !== window) {
+      window.parent.postMessage({
+        type: 'REQUEST_NEW_FIREBASE_TOKEN',
+        promiseId: currentPromiseId
+      }, '*');
+    } else {
+      pendingTokenPromises[currentPromiseId].reject(new Error('No parent window to request token from.'));
+      delete pendingTokenPromises[currentPromiseId];
+    }
+    return promise;
+  };
+})();</script><script data-bard-client-injected="true">
+let realOriginalGetUserMedia = null;
+if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+  realOriginalGetUserMedia = navigator.mediaDevices.getUserMedia.bind(navigator.mediaDevices);
+}
+
+(function() {
+  if (navigator.mediaDevices && navigator.mediaDevices.__proto__) {
+    try {
+      Object.defineProperty(navigator.mediaDevices.__proto__, 'getUserMedia', {
+        get: function() {
+          return undefined; // Or throw an error
+        },
+        configurable: false
+      });
+    } catch (error) {
+      console.error("Error defining prototype getter:", error);
+    }
+  }
+})();
+
+(function() {
+  const pendingMediaResolvers = {};
+  let nextMediaPromiseId = 0;
+
+  function requestMediaPermissions(constraints) {
+    const mediaPromiseId = nextMediaPromiseId++;
+    const promise = new Promise((resolve, reject) => {
+      pendingMediaResolvers[mediaPromiseId] = (granted) => {
+        delete pendingMediaResolvers[mediaPromiseId];
+        resolve(granted);
+      };
+    });
+
+    window.parent.postMessage({
+      type: 'requestMediaPermission',
+      constraints: constraints,
+      promiseId: mediaPromiseId,
+    }, '*');
+
+    return promise;
+  }
+
+  let originalGetUserMedia = realOriginalGetUserMedia;
+
+  function interceptGetUserMedia() {
+    if (navigator.mediaDevices) {
+      Object.defineProperty(navigator.mediaDevices, 'getUserMedia', {
+        value: function(constraints) {
+          return requestMediaPermissions(constraints).then((granted) => {
+            if (granted) {
+              if (originalGetUserMedia) {
+                return originalGetUserMedia(constraints);
+              } else {
+                throw new Error("Original getUserMedia not available.");
+              }
+            } else {
+              throw new DOMException('Permission denied', 'NotAllowedError');
+            }
+          });
+        },
+        writable: false,
+        configurable: false
+      });
+    }
+  }
+
+  interceptGetUserMedia();
+
+  const observer = new MutationObserver(function(mutationsList, observer) {
+    for (const mutation of mutationsList) {
+      if (mutation.type === 'reconfigured' && mutation.name === 'getUserMedia' && mutation.object === navigator.mediaDevices) {
+        interceptGetUserMedia();
+      } else if (mutation.type === 'attributes' && mutation.attributeName === 'getUserMedia' && mutation.target === navigator.mediaDevices) {
+        interceptGetUserMedia();
+      } else if (mutation.type === 'childList' && mutation.addedNodes) {
+        mutation.addedNodes.forEach(node => {
+          if (node === navigator.mediaDevices) {
+            interceptGetUserMedia();
+          }
+        });
+      }
+    }
+  });
+
+  function interceptSpeechRecognition() {
+    if (!window.SpeechRecognition && !window.webkitSpeechRecognition) {
+      return;
+    }
+
+    const OriginalSpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+    const SpeechRecognitionWrapper = function(...args) {
+      const recognizer = new OriginalSpeechRecognition(...args);
+      const originalStart = recognizer.start.bind(recognizer);
+
+      recognizer.start = function() {
+        requestMediaPermissions({ audio: true }).then(granted => {
+          if (granted) {
+            originalStart();
+          } else {
+            const errorEvent = new SpeechRecognitionErrorEvent('error');
+            errorEvent.error = 'not-allowed'; // This is the standard error for permission denial.
+            recognizer.dispatchEvent(errorEvent);
+          }
+        });
+      };
+
+      return recognizer;
+    };
+
+    SpeechRecognitionWrapper.prototype = OriginalSpeechRecognition.prototype;
+    SpeechRecognitionWrapper.prototype.constructor = SpeechRecognitionWrapper;
+
+    if (window.SpeechRecognition) {
+      window.SpeechRecognition = SpeechRecognitionWrapper;
+    }
+    if (window.webkitSpeechRecognition) {
+      window.webkitSpeechRecognition = SpeechRecognitionWrapper;
+    }
+  }
+
+  interceptSpeechRecognition();
+
+  window.addEventListener('message', function(event) {
+    if (event.data) {
+      if (event.data.type === 'resolveMediaPermission') {
+        const { promiseId, granted } = event.data;
+        if (pendingMediaResolvers[promiseId]) {
+          pendingMediaResolvers[promiseId](granted);
+        }
+      }
+    }
+  });
+
+})();</script><script ws-interception-config="{&quot;parentOrigin&quot;:&quot;https://gemini.google.com&quot;,&quot;proxiedDomains&quot;:[]}" data-bard-client-injected="true">(function(){'use strict';var u=typeof Object.defineProperties=="function"?Object.defineProperty:function(b,d,e){if(b==Array.prototype||b==Object.prototype)return b;b[d]=e.value;return b};function v(b){b=["object"==typeof globalThis&&globalThis,b,"object"==typeof window&&window,"object"==typeof self&&self,"object"==typeof global&&global];for(var d=0;d<b.length;++d){var e=b[d];if(e&&e.Math==Math)return e}throw Error("Cannot find global object");}var w=v(this);
+function y(b,d){if(d)a:{var e=w;b=b.split(".");for(var h=0;h<b.length-1;h++){var k=b[h];if(!(k in e))break a;e=e[k]}b=b[b.length-1];h=e[b];d=d(h);d!=h&&d!=null&&u(e,b,{configurable:!0,writable:!0,value:d})}}function z(b){function d(h){return b.next(h)}function e(h){return b.throw(h)}return new Promise(function(h,k){function m(n){n.done?h(n.value):Promise.resolve(n.value).then(d,e).then(m,k)}m(b.next())})}y("globalThis",function(b){return b||w});/*
+
+ Copyright The Closure Library Authors.
+ SPDX-License-Identifier: Apache-2.0
+*/
+function A(b,d){function e(){}e.prototype=d.prototype;b.i=d.prototype;b.prototype=new e;b.prototype.constructor=b;b.h=function(h,k,m){for(var n=Array(arguments.length-2),p=2;p<arguments.length;p++)n[p-2]=arguments[p];return d.prototype[k].apply(h,n)}};function B(b,d,e="*"){function h(a){if(typeof a==="string")return F.encode(a).buffer;if(a instanceof ArrayBuffer)return a.slice(0);if(ArrayBuffer.isView(a))return a.buffer.slice(a.byteOffset,a.byteOffset+a.byteLength);throw Error("Invalid data type");}function k(a){a=h(a);var f={type:"send",data:new Uint8Array(a)},g;(g=r)==null||g.postMessage(f,[a])}function m(){if(!r)throw Error("Data port not captured yet.");r.onmessage=a=>{if(a.data.type==="message"){a=new MessageEvent("message",{data:G.decode(a.data.data)});
+let f;(f=c.onmessage)==null||f.call(c,a);c.dispatchEvent(a)}}}function n(){if(!t)throw Error("Control port not captured yet.");t.onmessage=a=>{switch(a.data.type){case "open":l=1;var f=new Event("open"),g;(g=c.onopen)==null||g.call(c,f);c.dispatchEvent(f);q.forEach(H=>{k(H)});q=[];break;case "close":g=a.data;l=3;g=new CloseEvent("close",{code:g.code,reason:g.reason,wasClean:g.wasClean});(f=c.onclose)==null||f.call(c,g);c.dispatchEvent(g);break;case "error":l=3;f=new Event("error");let x;(x=c.onerror)==
+null||x.call(c,f);c.dispatchEvent(f)}}}function p(a){return z(function*(){var f=new MessageChannel;t=f.port1;var g=new MessageChannel;r=g.port1;n();m();window.parent.postMessage({type:"websocket_open",portOrdering:["control","data"],url:b,protocols:a||[],connectionId:I},e,[f.port2,g.port2])}())}var c=Reflect.construct(EventTarget,[],new.target);c.CONNECTING=0;c.OPEN=1;c.CLOSING=2;c.CLOSED=3;c.url=b;c.binaryType="arraybuffer";c.protocol="";c.extensions="";var l=0,t=null,r=null,q=[],F=new TextEncoder,
+G=new TextDecoder;c.onopen=null;c.onmessage=null;c.onclose=null;c.onerror=null;Object.defineProperty(c,"readyState",{get:()=>l,enumerable:!0,configurable:!0});Object.defineProperty(c,"bufferedAmount",{get:()=>{var a=0;q.forEach(f=>{a+=typeof f==="string"?f.length:f.byteLength});return a},enumerable:!0,configurable:!0});var I=function(){var a;return((a=globalThis.crypto)==null?0:a.randomUUID)?globalThis.crypto.randomUUID():"xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g,f=>{var g=Math.random()*
+16|0;return(f==="x"?g:g&3|8).toString(16)})}();c.send=a=>{if(l===1)a instanceof Blob?a.arrayBuffer().then(f=>{k(f)}):k(a);else if(l===0)if(typeof a==="string")q.push(a);else if(a instanceof ArrayBuffer||ArrayBuffer.isView(a))q.push(h(a));else throw Error("Sending Blob is not supported before the connection is open.");else console.debug("WebSocket send called in CLOSING or CLOSED state; ignored.")};c.close=(a=1E3,f="")=>{if(l!==2&&l!==3){l=2;a={type:"close",code:a,reason:f,wasClean:a===1E3};var g;
+(g=t)==null||g.postMessage(a)}};Promise.resolve().then(()=>p(d));return c}A(B,EventTarget);var C=document.currentScript,D=C==null?void 0:C.getAttribute("ws-interception-config");if(!D)throw Error("WebSocket Interceptor: Missing ws-interception-config attribute in the script tag.");var E=JSON.parse(D);if(!E.parentOrigin||typeof E.parentOrigin!=="string")throw Error("WebSocket Interceptor: Invalid parentOrigin in ws-interception-config");
+(function(b){var d=Object.getOwnPropertyDescriptor(window,"WebSocket");if(!d||d.writable||d.configurable)d=Object.assign(function(e,h){try{let k=(new URL(e)).hostname;if(b.proxiedDomains.some(m=>k===m||k.endsWith(`.${m}`)))return new B(e,h,b.parentOrigin)}catch(k){throw window.parent.postMessage({type:"websocket_blocked",url:e,reason:"blocked_invalid_url"},b.parentOrigin),new DOMException(`WebSocket connection to '${e}' is not allowed in Canvas.`,"SecurityError");}window.parent.postMessage({type:"websocket_blocked",
+url:e,reason:"blocked_domain_not_allowlisted"},b.parentOrigin);throw new DOMException(`WebSocket connection to '${e}' is not allowed in Canvas.`,"SecurityError");},{CONNECTING:0,OPEN:1,CLOSING:2,CLOSED:3}),Object.defineProperty(window,"WebSocket",{value:d,writable:!1,configurable:!1})})({proxiedDomains:E.proxiedDomains||[],parentOrigin:E.parentOrigin});}).call(this);
+</script><script data-bard-client-injected="true">((function(modelInformation) {
+  const originalFetch = window.fetch;
+  // TODO: b/421908508 - Move these out of the script and match all generative AI model calls.
+  let googleLlmBaseApiUrls = [
+    'https://generativelanguage.googleapis.com/v1beta/models/' + modelInformation.textModelName + ':streamGenerateContent',
+    'https://generativelanguage.googleapis.com/v1beta/models/' + modelInformation.textModelName + ':generateContent',
+    'https://generativelanguage.googleapis.com/v1beta/models/' + modelInformation.imageModelName + ':predict',
+    'https://generativelanguage.googleapis.com/v1beta/models/' + modelInformation.imageModelName + ':predictLongRunning',
+    'https://generativelanguage.googleapis.com/v1beta/models/' + modelInformation.imageEditModelName + ':generateContent',
+    'https://generativelanguage.googleapis.com/v1beta/models/' + modelInformation.imageTransformModelName + ':generateContent',
+    'https://generativelanguage.googleapis.com/v1beta/models/' + modelInformation.videoModelName + ':predict',
+    'https://generativelanguage.googleapis.com/v1beta/models/' + modelInformation.videoModelName + ':predictLongRunning',
+    'https://generativelanguage.googleapis.com/v1beta/models/' + modelInformation.ttsModelName + ':generateContent',
+  ];
+  modelInformation.deprecatedTextModelNames.forEach((modelName) => {
+    googleLlmBaseApiUrls.push(
+      'https://generativelanguage.googleapis.com/v1beta/models/' + modelName + ':streamGenerateContent',
+      'https://generativelanguage.googleapis.com/v1beta/models/' + modelName + ':generateContent',
+    );
+  });
+  modelInformation.deprecatedImageModelNames.forEach((modelName) => {
+    googleLlmBaseApiUrls.push(
+      'https://generativelanguage.googleapis.com/v1beta/models/' + modelName + ':predict',
+      'https://generativelanguage.googleapis.com/v1beta/models/' + modelName + ':predictLongRunning',
+      'https://generativelanguage.googleapis.com/v1beta/models/' + modelName + ':generateContent',
+      'https://generativelanguage.googleapis.com/v1beta/models/' + modelName + ':streamGenerateContent',
+    );
+  });
+  modelInformation.deprecatedGenerateImageModelNames.forEach((modelName) => {
+    googleLlmBaseApiUrls.push(
+      'https://generativelanguage.googleapis.com/v1beta/models/' + modelName + ':generateContent',
+      'https://generativelanguage.googleapis.com/v1beta/models/' + modelName + ':streamGenerateContent',
+    );
+  });
+  modelInformation.deprecatedImageTransformModelNames.forEach((modelName) => {
+    googleLlmBaseApiUrls.push(
+      'https://generativelanguage.googleapis.com/v1beta/models/' + modelName + ':generateContent',
+      'https://generativelanguage.googleapis.com/v1beta/models/' + modelName + ':streamGenerateContent',
+    );
+  });
+
+  const pendingFetchResolvers = {};
+  let nextPromiseId = 0;
+
+  function handleStringInput(input, optionsArgument) {
+    const actualUrl = input;
+    const fetchCallArgs = [actualUrl, optionsArgument];
+    const effectiveOptions = optionsArgument || {};
+    const bodyForApiKeyCheck = effectiveOptions.body;
+    const bodyForPostMessage = effectiveOptions.body;
+    return { actualUrl, fetchCallArgs, effectiveOptions, bodyForApiKeyCheck, bodyForPostMessage };
+  }
+
+  function handleRequestInput(input, optionsArgument) {
+    const actualUrl = input.url;
+    const fetchCallArgs = [input, optionsArgument];
+    const effectiveOptions = { method: input.method, headers: new Headers(input.headers) };
+    let bodyForApiKeyCheck;
+    let bodyForPostMessage;
+
+    if (optionsArgument) {
+      if (optionsArgument.method) effectiveOptions.method = optionsArgument.method;
+      if (optionsArgument.headers) effectiveOptions.headers = new Headers(optionsArgument.headers);
+      if ('body' in optionsArgument) {
+        bodyForApiKeyCheck = optionsArgument.body;
+        bodyForPostMessage = optionsArgument.body;
+      } else {
+        bodyForApiKeyCheck = undefined;
+        bodyForPostMessage = input.body;
+      }
+    } else {
+      bodyForApiKeyCheck = undefined;
+      bodyForPostMessage = input.body;
+    }
+    return { actualUrl, fetchCallArgs, effectiveOptions, bodyForApiKeyCheck, bodyForPostMessage };
+  }
+
+  window.fetch = function(input, optionsArgument) {
+    let actualUrl;
+    let fetchCallArgs;
+    let effectiveOptions = {};
+    let bodyForApiKeyCheck;
+    let bodyForPostMessage;
+
+    if (typeof input === 'string') {
+      ({actualUrl, fetchCallArgs, effectiveOptions, bodyForApiKeyCheck, bodyForPostMessage} = handleStringInput(input, optionsArgument));
+    } else if (input instanceof Request) {
+      ({actualUrl, fetchCallArgs, effectiveOptions, bodyForApiKeyCheck, bodyForPostMessage} = handleRequestInput(input, optionsArgument));
+    } else {
+      return originalFetch.apply(window, [input, optionsArgument]);
+    }
+
+    effectiveOptions.method = effectiveOptions.method || 'GET';
+    if (!effectiveOptions.headers) {
+      effectiveOptions.headers = new Headers();
+    }
+
+
+    if (typeof actualUrl === 'string' && googleLlmBaseApiUrls.some((url) => actualUrl.startsWith(url))) {
+      let apiKeyIsNull = true;
+
+      const regex = new RegExp("models/([^:]+)");
+      const modelNameMatch = actualUrl.match(regex);
+      const modelName = modelNameMatch ? modelNameMatch[1] : 'unspecified';
+
+
+      try {
+        const urlObject = new URL(actualUrl);  // Use URL object for robust parsing
+        const apiKeyParam = urlObject.searchParams.get('key');
+        if (apiKeyParam) {
+          apiKeyIsNull = false;
+        }
+      } catch (e) {
+        // Continue checks even if URL parsing fails
+      }
+
+      if (apiKeyIsNull && effectiveOptions.headers) {
+        const h = new Headers(effectiveOptions.headers);
+        const apiKeyHeaderValue = h.get('X-API-Key') || h.get('x-api-key');
+        if (apiKeyHeaderValue) {
+          apiKeyIsNull = false;
+          return originalFetch.apply(window, fetchCallArgs);
+        }
+      }
+
+      if (apiKeyIsNull && effectiveOptions.method && ['POST', 'PUT', 'PATCH'].includes(effectiveOptions.method.toUpperCase()) && typeof bodyForApiKeyCheck === 'string') {
+        try {
+          const bodyData = JSON.parse(bodyForApiKeyCheck);
+          if (bodyData && bodyData.apiKey) {
+            apiKeyIsNull = false;
+            return originalFetch.apply(window, fetchCallArgs);
+          }
+        } catch (e) {
+          // Ignore JSON parsing errors
+        }
+      }
+
+      if(apiKeyIsNull) {
+        const promiseId = nextPromiseId++;
+        const promise = new Promise((resolve) => {
+          pendingFetchResolvers[promiseId] = (resolvedResponse) => {
+            delete pendingFetchResolvers[promiseId];
+            resolve(resolvedResponse);
+          };
+        });
+
+        let serializedBodyForPostMessage;
+        if (typeof bodyForPostMessage === 'string' || bodyForPostMessage == null) {
+            serializedBodyForPostMessage = bodyForPostMessage;
+        } else if (bodyForPostMessage instanceof ReadableStream) {
+            serializedBodyForPostMessage = null;
+        } else {
+            try {
+                serializedBodyForPostMessage = JSON.stringify(bodyForPostMessage);
+            } catch (e) {
+                serializedBodyForPostMessage = null;
+            }
+        }
+
+        const messageOptions = {
+            method: effectiveOptions.method,
+            headers: Object.fromEntries(new Headers(effectiveOptions.headers).entries()),
+            body: serializedBodyForPostMessage
+        };
+
+        window.parent.postMessage({
+          type: 'requestFetch',
+          url: actualUrl,
+          modelName: modelName,
+          options: messageOptions,
+          promiseId: promiseId,
+        }, '*');
+
+        return promise;
+      }
+      return originalFetch.apply(window, fetchCallArgs);
+    }
+    return originalFetch.apply(window, fetchCallArgs);
+  };
+
+  window.addEventListener('message', function(event) {
+    if (event.data && event.data.type === 'resolveFetch') {
+      const { promiseId, response } = event.data;
+      if (pendingFetchResolvers[promiseId]) {
+        try {
+          const reconstructedResponse = new Response(response.body, {
+            status: response.status,
+            statusText: response.statusText,
+            headers: new Headers(response.headers),
+          });
+          pendingFetchResolvers[promiseId](reconstructedResponse);
+        } catch (error) {
+          pendingFetchResolvers[promiseId](new Response(null, { status: 500, statusText: "Interceptor Response Reconstruction Error" }));
+        }
+      }
+    }
+  });
+
+}))({"textModelName":"gemini-3-flash-preview","imageModelName":"imagen-4.0-generate-001","imageEditModelName":"gemini-3.1-flash-image","imageTransformModelName":"gemini-3-pro-image","videoModelName":"veo-2.0-generate-001","ttsModelName":"gemini-2.5-flash-preview-tts","deprecatedTextModelNames":["gemini-2.0-flash","gemini-2.5-flash","gemini-2.5-flash-preview-04-17","gemini-2.5-flash-preview-05-20","gemini-2.5-flash-preview-09-2025"],"deprecatedImageModelNames":["imagen-3.0-generate-001","imagen-3.0-generate-002"],"deprecatedGenerateImageModelNames":["gemini-2.5-flash-image-preview","gemini-2.5-flash-image","gemini-3.1-flash-image-preview"],"deprecatedImageTransformModelNames":["gemini-3-pro-image-preview-11-2025"]})</script><script data-bard-client-injected="true">(function() {
+  const OVERLAY_SELECTOR =
+    'dialog[open], [role="dialog"], [role="alertdialog"], [role="menu"], [role="listbox"], [role="combobox"]';
+
+  function isVisibleOverlay(element) {
+    if (element.closest('[hidden], [aria-hidden="true"], [inert]')) {
+      return false;
+    }
+    if (window.getComputedStyle(element).visibility === 'hidden') {
+      return false;
+    }
+    for (let cur = element; cur; cur = cur.parentElement) {
+      if (window.getComputedStyle(cur).display === 'none') {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  function hasOpenOverlay() {
+    const candidates = document.querySelectorAll(OVERLAY_SELECTOR);
+    for (let i = 0; i < candidates.length; i++) {
+      if (isVisibleOverlay(candidates[i])) {
+        return true;
+      }
+    }
+    try {
+      if (document.querySelector('[popover]:popover-open')) {
+        return true;
+      }
+    } catch (e) {
+      // Ignore engines that do not support :popover-open.
+    }
+    return false;
+  }
+
+  function isNonEmptySearchInput(target) {
+    return (
+      Boolean(target) &&
+      target.tagName === 'INPUT' &&
+      typeof target.type === 'string' &&
+      target.type.toLowerCase() === 'search' &&
+      typeof target.value === 'string' &&
+      target.value.length > 0
+    );
+  }
+
+  function shouldIgnoreEscape(event) {
+    return (
+      event.key !== 'Escape' ||
+      event.altKey ||
+      event.ctrlKey ||
+      event.metaKey ||
+      event.shiftKey ||
+      event.isComposing ||
+      event.repeat ||
+      event.keyCode === 229 ||
+      isNonEmptySearchInput(event.target)
+    );
+  }
+
+  let shouldIgnoreCaptureState = false;
+
+  window.addEventListener(
+    'keydown',
+    function(event) {
+      if (event.key === 'Escape') {
+        shouldIgnoreCaptureState =
+          hasOpenOverlay() || isNonEmptySearchInput(event.target);
+      }
+    },
+    {capture: true},
+  );
+
+  window.addEventListener('keydown', function(event) {
+    if (
+      shouldIgnoreEscape(event) ||
+      event.defaultPrevented ||
+      shouldIgnoreCaptureState
+    ) {
+      return;
+    }
+    const wasBlockedOnCapture = shouldIgnoreCaptureState;
+    queueMicrotask(function() {
+      if (event.defaultPrevented || wasBlockedOnCapture) {
+        return;
+      }
+      if (window.parent && window.parent !== window) {
+        window.parent.postMessage({'type': 'escapeKey'}, '*');
+      }
+    });
+  });
+})();</script><script data-bard-client-injected="true">(function() {
+  function normalizeSlug(str) {
+    try {
+      return str
+        .trim()
+        .toLowerCase()
+        .replace(/[^p{L}p{N}s_-]/gu, '')
+        .replace(/s+/g, '-');
+    } catch (e) {
+      return str
+        .trim()
+        .toLowerCase()
+        .replace(/[^a-z0-9s_-]/g, '')
+        .replace(/s+/g, '-');
+    }
+  }
+
+  function findTargetElement(hash) {
+    if (!hash || hash === '#') {
+      return null;
+    }
+    const rawId = hash.startsWith('#') ? hash.slice(1) : hash;
+    let decodedId = rawId;
+    try {
+      decodedId = decodeURIComponent(rawId);
+    } catch (e) {
+      // Ignore URI malformed errors.
+    }
+
+    // 1. Direct ID match (raw and decoded).
+    let target = document.getElementById(rawId) || document.getElementById(decodedId);
+    if (target) {
+      return target;
+    }
+
+    // 2. Name attribute match (<a name="...">).
+    try {
+      if (typeof CSS !== 'undefined' && CSS.escape) {
+        target =
+          document.querySelector('[name="' + CSS.escape(rawId) + '"]') ||
+          document.querySelector('[name="' + CSS.escape(decodedId) + '"]');
+      } else {
+        const namedElements = document.getElementsByName(rawId);
+        if (namedElements && namedElements.length > 0) {
+          return namedElements[0];
+        }
+      }
+    } catch (e) {
+      // Ignore querySelector syntax errors.
+    }
+    if (target) {
+      return target;
+    }
+
+    // 3. Match heading text by slug (for Markdown TOCs where headings lack explicit IDs).
+    const targetSlug = normalizeSlug(decodedId);
+    if (targetSlug) {
+      for (const heading of document.querySelectorAll('h1, h2, h3, h4, h5, h6')) {
+        if (normalizeSlug(heading.textContent || '') === targetSlug) {
+          return heading;
+        }
+      }
+    }
+
+    return null;
+  }
+
+  document.addEventListener('click', function(event) {
+    const target = event.target;
+    const anchor = target && typeof target.closest === 'function' ? target.closest('a') : null;
+    if (!anchor) {
+      return;
+    }
+
+    const href = anchor.getAttribute('href');
+    if (
+      !href ||
+      href.trim().toLowerCase().startsWith('javascript:') ||
+      anchor.hasAttribute('download')
+    ) {
+      return;
+    }
+
+    // Check if the link is an in-page hash / anchor link.
+    if (href.startsWith('#')) {
+      event.preventDefault();
+      const targetElement = findTargetElement(href);
+      if (targetElement) {
+        targetElement.scrollIntoView({behavior: 'smooth', block: 'start'});
+      }
+      return;
+    }
+
+    // Check if the URL has the same origin/pathname but with a hash.
+    try {
+      const url = new URL(anchor.href, window.location.href);
+      if (
+        url.hash &&
+        url.origin === window.location.origin &&
+        url.pathname === window.location.pathname
+      ) {
+        event.preventDefault();
+        const targetElement = findTargetElement(url.hash);
+        if (targetElement) {
+          targetElement.scrollIntoView({behavior: 'smooth', block: 'start'});
+        }
+        return;
+      }
+    } catch (e) {
+      // Fall through if URL parsing fails.
+    }
+
+    // For all external or full navigation links, prevent iframe-level navigation
+    // (which breaks in AGSA WebView or sandboxed iframes) and ensure they open
+    // safely in a new tab/window.
+    if (anchor.target !== '_blank') {
+      event.preventDefault();
+      window.open(anchor.href, '_blank', 'noopener,noreferrer');
+    }
+  }, {capture: true});
+})();</script><script data-bard-client-injected="true">(function(){'use strict';function a(){window.parent.postMessage({type:"interaction"},"*")}window.addEventListener("click",a,{capture:!0,passive:!0});window.addEventListener("touchstart",a,{capture:!0,passive:!0});window.addEventListener("keydown",a,{capture:!0,passive:!0});}).call(this);
+</script><script data-bard-client-injected="true">(function() {
+  const originalConsoleLog = console.log;
+  const originalConsoleError = console.error;
+
+    /**
+   * Normalizes an error event or a promise rejection reason into a structured error object.
+   * @param {*} errorEventOrReason The error object or reason.
+   * @return {object} Structured error data { message, name, stack }.
+   */
+  function getErrorObject(errorEventOrReason) {
+    if (errorEventOrReason instanceof Error) {
+      return {
+        message: errorEventOrReason.message,
+        name: errorEventOrReason.name,
+        stack: errorEventOrReason.stack,
+      };
+    }
+    // Fallback for non-Error objects.
+    try {
+      return {
+        message: JSON.stringify(errorEventOrReason),
+        name: 'UnknownErrorType',
+        stack: null,
+      };
+    } catch (e) {
+      return {
+        message: String(errorEventOrReason),
+        name: 'UnknownErrorTypeNonStringifiable',
+        stack: null,
+      };
+    }
+  }
+
+  /**
+   * Converts an array of arguments (from log/error) into a single string.
+   * Handles Error objects specially to include their message and stack.
+   * @param {Array<*>} args - Arguments passed to console methods.
+   * @return {string} A string representation of the arguments.
+   */
+  function stringifyArgs(args) {
+    return args
+      .map((arg) => {
+        if (arg instanceof Error) {
+          const {message, stack} = arg;
+          return `Error: ${message}${stack ? ('\nStack: ' + stack) : ''}`;
+        }
+        if (typeof arg === 'object' && arg !== null) {
+          try {
+            return JSON.stringify(arg);
+          } catch (error) {
+            return '[Circular Object]';
+          }
+        } else {
+          return String(arg);
+        }
+      })
+      .join(' ');
+  }
+
+  console.log = function(...args) {
+    const logString = stringifyArgs(args);
+    window.parent.postMessage({ type: 'log', message: logString }, '*');
+    originalConsoleLog.apply(console, args);
+  };
+
+  console.error = function(...args) {
+    let errorData;
+    if (args.length > 0 && args[0] instanceof Error) {
+      const err = args[0];
+      // If the first arg is an Error, capture its details.
+      errorData = {
+        type: 'error',
+        source: 'CONSOLE_ERROR',
+        ...getErrorObject(err),
+        rawArgsString: stringifyArgs(args.slice(1)),
+        timestamp: new Date().toISOString(),
+      };
+    } else {
+      // If not an Error object, treat all args as a general error message.
+      errorData = {
+        type: 'error',
+        source: 'CONSOLE_ERROR',
+        message: stringifyArgs(args),
+        name: 'ConsoleLoggedError',
+        stack: null,
+        timestamp: new Date().toISOString(),
+      };
+    }
+    window.parent.postMessage(errorData, '*');
+    originalConsoleError.apply(console, args);
+  };
+
+  // Listen for global unhandled synchronous errors.
+  window.addEventListener('error', function(event) {
+    const errorDetails = event.error ? getErrorObject(event.error) : {
+      message: event.message,
+      name: 'GlobalError',
+      stack: null,
+      filename: event.filename,
+      lineno: event.lineno,
+      colno: event.colno,
+    };
+
+    window.parent.postMessage({
+      type: 'error',
+      source: 'global',
+      ...errorDetails,
+      message: errorDetails.message || event.message,
+      timestamp: new Date().toISOString(),
+    }, '*');
+  });
+
+  // Listen for unhandled promise rejections (asynchronous errors).
+  window.addEventListener('unhandledrejection', function(event) {
+    const errorDetails = getErrorObject(event.reason);
+
+    window.parent.postMessage({
+      type: 'error',
+      source: 'unhandledrejection',
+      ...errorDetails,
+      message: errorDetails.message || 'Unhandled Promise Rejection',
+      timestamp: new Date().toISOString(),
+    }, '*');
+  });
+
+})();</script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>2026年11月 AI 大模型综合能力排行榜 | LLM Leaderboard</title>
+  <!-- Load Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts: Inter & JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;family=JetBrains+Mono:wght@500;600;700&amp;display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          },
+          colors: {
+            slatebg: '#090d16',
+            slatecard: '#111827',
+            slateborder: '#1e293b',
+          }
+        }
+      }
+    }
+  </script>
+<style>*, ::before, ::after{--tw-border-spacing-x:0;--tw-border-spacing-y:0;--tw-translate-x:0;--tw-translate-y:0;--tw-rotate:0;--tw-skew-x:0;--tw-skew-y:0;--tw-scale-x:1;--tw-scale-y:1;--tw-pan-x: ;--tw-pan-y: ;--tw-pinch-zoom: ;--tw-scroll-snap-strictness:proximity;--tw-gradient-from-position: ;--tw-gradient-via-position: ;--tw-gradient-to-position: ;--tw-ordinal: ;--tw-slashed-zero: ;--tw-numeric-figure: ;--tw-numeric-spacing: ;--tw-numeric-fraction: ;--tw-ring-inset: ;--tw-ring-offset-width:0px;--tw-ring-offset-color:#fff;--tw-ring-color:rgb(59 130 246 / 0.5);--tw-ring-offset-shadow:0 0 #0000;--tw-ring-shadow:0 0 #0000;--tw-shadow:0 0 #0000;--tw-shadow-colored:0 0 #0000;--tw-blur: ;--tw-brightness: ;--tw-contrast: ;--tw-grayscale: ;--tw-hue-rotate: ;--tw-invert: ;--tw-saturate: ;--tw-sepia: ;--tw-drop-shadow: ;--tw-backdrop-blur: ;--tw-backdrop-brightness: ;--tw-backdrop-contrast: ;--tw-backdrop-grayscale: ;--tw-backdrop-hue-rotate: ;--tw-backdrop-invert: ;--tw-backdrop-opacity: ;--tw-backdrop-saturate: ;--tw-backdrop-sepia: ;--tw-contain-size: ;--tw-contain-layout: ;--tw-contain-paint: ;--tw-contain-style: }::backdrop{--tw-border-spacing-x:0;--tw-border-spacing-y:0;--tw-translate-x:0;--tw-translate-y:0;--tw-rotate:0;--tw-skew-x:0;--tw-skew-y:0;--tw-scale-x:1;--tw-scale-y:1;--tw-pan-x: ;--tw-pan-y: ;--tw-pinch-zoom: ;--tw-scroll-snap-strictness:proximity;--tw-gradient-from-position: ;--tw-gradient-via-position: ;--tw-gradient-to-position: ;--tw-ordinal: ;--tw-slashed-zero: ;--tw-numeric-figure: ;--tw-numeric-spacing: ;--tw-numeric-fraction: ;--tw-ring-inset: ;--tw-ring-offset-width:0px;--tw-ring-offset-color:#fff;--tw-ring-color:rgb(59 130 246 / 0.5);--tw-ring-offset-shadow:0 0 #0000;--tw-ring-shadow:0 0 #0000;--tw-shadow:0 0 #0000;--tw-shadow-colored:0 0 #0000;--tw-blur: ;--tw-brightness: ;--tw-contrast: ;--tw-grayscale: ;--tw-hue-rotate: ;--tw-invert: ;--tw-saturate: ;--tw-sepia: ;--tw-drop-shadow: ;--tw-backdrop-blur: ;--tw-backdrop-brightness: ;--tw-backdrop-contrast: ;--tw-backdrop-grayscale: ;--tw-backdrop-hue-rotate: ;--tw-backdrop-invert: ;--tw-backdrop-opacity: ;--tw-backdrop-saturate: ;--tw-backdrop-sepia: ;--tw-contain-size: ;--tw-contain-layout: ;--tw-contain-paint: ;--tw-contain-style: }/* ! tailwindcss v3.4.17 | MIT License | https://tailwindcss.com */*,::after,::before{box-sizing:border-box;border-width:0;border-style:solid;border-color:#e5e7eb}::after,::before{--tw-content:''}:host,html{line-height:1.5;-webkit-text-size-adjust:100%;-moz-tab-size:4;tab-size:4;font-family:Inter, -apple-system, BlinkMacSystemFont, sans-serif;font-feature-settings:normal;font-variation-settings:normal;-webkit-tap-highlight-color:transparent}body{margin:0;line-height:inherit}hr{height:0;color:inherit;border-top-width:1px}abbr:where([title]){-webkit-text-decoration:underline dotted;text-decoration:underline dotted}h1,h2,h3,h4,h5,h6{font-size:inherit;font-weight:inherit}a{color:inherit;text-decoration:inherit}b,strong{font-weight:bolder}code,kbd,pre,samp{font-family:JetBrains Mono, monospace;font-feature-settings:normal;font-variation-settings:normal;font-size:1em}small{font-size:80%}sub,sup{font-size:75%;line-height:0;position:relative;vertical-align:baseline}sub{bottom:-.25em}sup{top:-.5em}table{text-indent:0;border-color:inherit;border-collapse:collapse}button,input,optgroup,select,textarea{font-family:inherit;font-feature-settings:inherit;font-variation-settings:inherit;font-size:100%;font-weight:inherit;line-height:inherit;letter-spacing:inherit;color:inherit;margin:0;padding:0}button,select{text-transform:none}button,input:where([type=button]),input:where([type=reset]),input:where([type=submit]){-webkit-appearance:button;background-color:transparent;background-image:none}:-moz-focusring{outline:auto}:-moz-ui-invalid{box-shadow:none}progress{vertical-align:baseline}::-webkit-inner-spin-button,::-webkit-outer-spin-button{height:auto}[type=search]{-webkit-appearance:textfield;outline-offset:-2px}::-webkit-search-decoration{-webkit-appearance:none}::-webkit-file-upload-button{-webkit-appearance:button;font:inherit}summary{display:list-item}blockquote,dd,dl,figure,h1,h2,h3,h4,h5,h6,hr,p,pre{margin:0}fieldset{margin:0;padding:0}legend{padding:0}menu,ol,ul{list-style:none;margin:0;padding:0}dialog{padding:0}textarea{resize:vertical}input::placeholder,textarea::placeholder{opacity:1;color:#9ca3af}[role=button],button{cursor:pointer}:disabled{cursor:default}audio,canvas,embed,iframe,img,object,svg,video{display:block;vertical-align:middle}img,video{max-width:100%;height:auto}[hidden]:where(:not([hidden=until-found])){display:none}.pointer-events-none{pointer-events:none}.fixed{position:fixed}.absolute{position:absolute}.relative{position:relative}.sticky{position:sticky}.inset-0{inset:0px}.inset-y-0{top:0px;bottom:0px}.bottom-5{bottom:1.25rem}.left-3{left:0.75rem}.right-2\.5{right:0.625rem}.right-5{right:1.25rem}.top-0{top:0px}.top-5{top:1.25rem}.z-30{z-index:30}.z-50{z-index:50}.mx-auto{margin-left:auto;margin-right:auto}.mb-1{margin-bottom:0.25rem}.mb-2{margin-bottom:0.5rem}.mb-4{margin-bottom:1rem}.mb-5{margin-bottom:1.25rem}.mb-8{margin-bottom:2rem}.ml-2{margin-left:0.5rem}.mr-1\.5{margin-right:0.375rem}.mr-2{margin-right:0.5rem}.mt-1{margin-top:0.25rem}.mt-10{margin-top:2.5rem}.mt-2{margin-top:0.5rem}.mt-4{margin-top:1rem}.mt-6{margin-top:1.5rem}.inline-block{display:inline-block}.flex{display:flex}.inline-flex{display:inline-flex}.grid{display:grid}.hidden{display:none}.h-1\.5{height:0.375rem}.h-16{height:4rem}.h-2{height:0.5rem}.h-9{height:2.25rem}.h-2\.5{height:0.625rem}.h-7{height:1.75rem}.h-full{height:100%}.max-h-\[90vh\]{max-height:90vh}.min-h-screen{min-height:100vh}.w-1\.5{width:0.375rem}.w-2{width:0.5rem}.w-20{width:5rem}.w-9{width:2.25rem}.w-full{width:100%}.w-12{width:3rem}.w-24{width:6rem}.w-7{width:1.75rem}.min-w-0{min-width:0px}.max-w-2xl{max-width:42rem}.max-w-7xl{max-width:80rem}.shrink-0{flex-shrink:0}.border-collapse{border-collapse:collapse}.translate-y-20{--tw-translate-y:5rem;transform:translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y))}.transform{transform:translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y))}@keyframes pulse{50%{opacity:.5}}.animate-pulse{animation:pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite}.cursor-pointer{cursor:pointer}.select-none{-webkit-user-select:none;user-select:none}.list-inside{list-style-position:inside}.list-decimal{list-style-type:decimal}.list-disc{list-style-type:disc}.grid-cols-1{grid-template-columns:repeat(1, minmax(0, 1fr))}.flex-col{flex-direction:column}.flex-wrap{flex-wrap:wrap}.items-center{align-items:center}.justify-end{justify-content:flex-end}.justify-center{justify-content:center}.justify-between{justify-content:space-between}.gap-1\.5{gap:0.375rem}.gap-2{gap:0.5rem}.gap-3{gap:0.75rem}.gap-4{gap:1rem}.space-x-1 > :not([hidden]) ~ :not([hidden]){--tw-space-x-reverse:0;margin-right:calc(0.25rem * var(--tw-space-x-reverse));margin-left:calc(0.25rem * calc(1 - var(--tw-space-x-reverse)))}.space-x-1\.5 > :not([hidden]) ~ :not([hidden]){--tw-space-x-reverse:0;margin-right:calc(0.375rem * var(--tw-space-x-reverse));margin-left:calc(0.375rem * calc(1 - var(--tw-space-x-reverse)))}.space-x-2 > :not([hidden]) ~ :not([hidden]){--tw-space-x-reverse:0;margin-right:calc(0.5rem * var(--tw-space-x-reverse));margin-left:calc(0.5rem * calc(1 - var(--tw-space-x-reverse)))}.space-x-2\.5 > :not([hidden]) ~ :not([hidden]){--tw-space-x-reverse:0;margin-right:calc(0.625rem * var(--tw-space-x-reverse));margin-left:calc(0.625rem * calc(1 - var(--tw-space-x-reverse)))}.space-x-3 > :not([hidden]) ~ :not([hidden]){--tw-space-x-reverse:0;margin-right:calc(0.75rem * var(--tw-space-x-reverse));margin-left:calc(0.75rem * calc(1 - var(--tw-space-x-reverse)))}.space-y-1 > :not([hidden]) ~ :not([hidden]){--tw-space-y-reverse:0;margin-top:calc(0.25rem * calc(1 - var(--tw-space-y-reverse)));margin-bottom:calc(0.25rem * var(--tw-space-y-reverse))}.space-y-1\.5 > :not([hidden]) ~ :not([hidden]){--tw-space-y-reverse:0;margin-top:calc(0.375rem * calc(1 - var(--tw-space-y-reverse)));margin-bottom:calc(0.375rem * var(--tw-space-y-reverse))}.space-y-5 > :not([hidden]) ~ :not([hidden]){--tw-space-y-reverse:0;margin-top:calc(1.25rem * calc(1 - var(--tw-space-y-reverse)));margin-bottom:calc(1.25rem * var(--tw-space-y-reverse))}.divide-y > :not([hidden]) ~ :not([hidden]){--tw-divide-y-reverse:0;border-top-width:calc(1px * calc(1 - var(--tw-divide-y-reverse)));border-bottom-width:calc(1px * var(--tw-divide-y-reverse))}.divide-slate-100 > :not([hidden]) ~ :not([hidden]){--tw-divide-opacity:1;border-color:rgb(241 245 249 / var(--tw-divide-opacity, 1))}.overflow-hidden{overflow:hidden}.overflow-x-auto{overflow-x:auto}.overflow-y-auto{overflow-y:auto}.truncate{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.whitespace-nowrap{white-space:nowrap}.rounded{border-radius:0.25rem}.rounded-2xl{border-radius:1rem}.rounded-full{border-radius:9999px}.rounded-lg{border-radius:0.5rem}.rounded-md{border-radius:0.375rem}.rounded-xl{border-radius:0.75rem}.border{border-width:1px}.border-b{border-bottom-width:1px}.border-blue-500\/20{border-color:rgb(59 130 246 / 0.2)}.border-emerald-500\/20{border-color:rgb(16 185 129 / 0.2)}.border-slate-200{--tw-border-opacity:1;border-color:rgb(226 232 240 / var(--tw-border-opacity, 1))}.border-slate-200\/80{border-color:rgb(226 232 240 / 0.8)}.border-slate-700{--tw-border-opacity:1;border-color:rgb(51 65 85 / var(--tw-border-opacity, 1))}.border-amber-500\/25{border-color:rgb(245 158 11 / 0.25)}.border-amber-500\/30{border-color:rgb(245 158 11 / 0.3)}.border-blue-500\/25{border-color:rgb(59 130 246 / 0.25)}.border-orange-500\/25{border-color:rgb(249 115 22 / 0.25)}.border-sky-500\/25{border-color:rgb(14 165 233 / 0.25)}.border-slate-400\/30{border-color:rgb(148 163 184 / 0.3)}.bg-amber-500{--tw-bg-opacity:1;background-color:rgb(245 158 11 / var(--tw-bg-opacity, 1))}.bg-amber-500\/10{background-color:rgb(245 158 11 / 0.1)}.bg-black\/70{background-color:rgb(0 0 0 / 0.7)}.bg-blue-500{--tw-bg-opacity:1;background-color:rgb(59 130 246 / var(--tw-bg-opacity, 1))}.bg-blue-500\/10{background-color:rgb(59 130 246 / 0.1)}.bg-blue-600{--tw-bg-opacity:1;background-color:rgb(37 99 235 / var(--tw-bg-opacity, 1))}.bg-emerald-500{--tw-bg-opacity:1;background-color:rgb(16 185 129 / var(--tw-bg-opacity, 1))}.bg-emerald-500\/10{background-color:rgb(16 185 129 / 0.1)}.bg-emerald-500\/15{background-color:rgb(16 185 129 / 0.15)}.bg-slate-100{--tw-bg-opacity:1;background-color:rgb(241 245 249 / var(--tw-bg-opacity, 1))}.bg-slate-200{--tw-bg-opacity:1;background-color:rgb(226 232 240 / var(--tw-bg-opacity, 1))}.bg-slate-50{--tw-bg-opacity:1;background-color:rgb(248 250 252 / var(--tw-bg-opacity, 1))}.bg-slate-50\/80{background-color:rgb(248 250 252 / 0.8)}.bg-slate-900{--tw-bg-opacity:1;background-color:rgb(15 23 42 / var(--tw-bg-opacity, 1))}.bg-white{--tw-bg-opacity:1;background-color:rgb(255 255 255 / var(--tw-bg-opacity, 1))}.bg-white\/85{background-color:rgb(255 255 255 / 0.85)}.bg-amber-500\/20{background-color:rgb(245 158 11 / 0.2)}.bg-orange-500\/15{background-color:rgb(249 115 22 / 0.15)}.bg-slate-300\/30{background-color:rgb(203 213 225 / 0.3)}.bg-gradient-to-br{background-image:linear-gradient(to bottom right, var(--tw-gradient-stops))}.bg-gradient-to-r{background-image:linear-gradient(to right, var(--tw-gradient-stops))}.from-blue-600{--tw-gradient-from:#2563eb var(--tw-gradient-from-position);--tw-gradient-to:rgb(37 99 235 / 0) var(--tw-gradient-to-position);--tw-gradient-stops:var(--tw-gradient-from), var(--tw-gradient-to)}.from-amber-500{--tw-gradient-from:#f59e0b var(--tw-gradient-from-position);--tw-gradient-to:rgb(245 158 11 / 0) var(--tw-gradient-to-position);--tw-gradient-stops:var(--tw-gradient-from), var(--tw-gradient-to)}.from-blue-500{--tw-gradient-from:#3b82f6 var(--tw-gradient-from-position);--tw-gradient-to:rgb(59 130 246 / 0) var(--tw-gradient-to-position);--tw-gradient-stops:var(--tw-gradient-from), var(--tw-gradient-to)}.from-sky-500{--tw-gradient-from:#0ea5e9 var(--tw-gradient-from-position);--tw-gradient-to:rgb(14 165 233 / 0) var(--tw-gradient-to-position);--tw-gradient-stops:var(--tw-gradient-from), var(--tw-gradient-to)}.to-indigo-600{--tw-gradient-to:#4f46e5 var(--tw-gradient-to-position)}.to-cyan-500{--tw-gradient-to:#06b6d4 var(--tw-gradient-to-position)}.to-indigo-500{--tw-gradient-to:#6366f1 var(--tw-gradient-to-position)}.to-orange-500{--tw-gradient-to:#f97316 var(--tw-gradient-to-position)}.p-2{padding:0.5rem}.p-3\.5{padding:0.875rem}.p-4{padding:1rem}.p-5{padding:1.25rem}.p-6{padding:1.5rem}.px-1\.5{padding-left:0.375rem;padding-right:0.375rem}.px-2{padding-left:0.5rem;padding-right:0.5rem}.px-2\.5{padding-left:0.625rem;padding-right:0.625rem}.px-3{padding-left:0.75rem;padding-right:0.75rem}.px-3\.5{padding-left:0.875rem;padding-right:0.875rem}.px-4{padding-left:1rem;padding-right:1rem}.py-0\.5{padding-top:0.125rem;padding-bottom:0.125rem}.py-1{padding-top:0.25rem;padding-bottom:0.25rem}.py-1\.5{padding-top:0.375rem;padding-bottom:0.375rem}.py-14{padding-top:3.5rem;padding-bottom:3.5rem}.py-2{padding-top:0.5rem;padding-bottom:0.5rem}.py-2\.5{padding-top:0.625rem;padding-bottom:0.625rem}.py-3{padding-top:0.75rem;padding-bottom:0.75rem}.py-4{padding-top:1rem;padding-bottom:1rem}.py-6{padding-top:1.5rem;padding-bottom:1.5rem}.pb-6{padding-bottom:1.5rem}.pl-9{padding-left:2.25rem}.pr-8{padding-right:2rem}.text-left{text-align:left}.text-center{text-align:center}.font-mono{font-family:JetBrains Mono, monospace}.font-sans{font-family:Inter, -apple-system, BlinkMacSystemFont, sans-serif}.text-3xl{font-size:1.875rem;line-height:2.25rem}.text-base{font-size:1rem;line-height:1.5rem}.text-sm{font-size:0.875rem;line-height:1.25rem}.text-xl{font-size:1.25rem;line-height:1.75rem}.text-xs{font-size:0.75rem;line-height:1rem}.font-bold{font-weight:700}.font-extrabold{font-weight:800}.font-medium{font-weight:500}.font-normal{font-weight:400}.font-semibold{font-weight:600}.uppercase{text-transform:uppercase}.leading-relaxed{line-height:1.625}.tracking-tight{letter-spacing:-0.025em}.tracking-wider{letter-spacing:0.05em}.text-amber-600{--tw-text-opacity:1;color:rgb(217 119 6 / var(--tw-text-opacity, 1))}.text-blue-500{--tw-text-opacity:1;color:rgb(59 130 246 / var(--tw-text-opacity, 1))}.text-blue-600{--tw-text-opacity:1;color:rgb(37 99 235 / var(--tw-text-opacity, 1))}.text-blue-700{--tw-text-opacity:1;color:rgb(29 78 216 / var(--tw-text-opacity, 1))}.text-emerald-400{--tw-text-opacity:1;color:rgb(52 211 153 / var(--tw-text-opacity, 1))}.text-emerald-500{--tw-text-opacity:1;color:rgb(16 185 129 / var(--tw-text-opacity, 1))}.text-emerald-600{--tw-text-opacity:1;color:rgb(5 150 105 / var(--tw-text-opacity, 1))}.text-slate-400{--tw-text-opacity:1;color:rgb(148 163 184 / var(--tw-text-opacity, 1))}.text-slate-500{--tw-text-opacity:1;color:rgb(100 116 139 / var(--tw-text-opacity, 1))}.text-slate-600{--tw-text-opacity:1;color:rgb(71 85 105 / var(--tw-text-opacity, 1))}.text-slate-700{--tw-text-opacity:1;color:rgb(51 65 85 / var(--tw-text-opacity, 1))}.text-slate-900{--tw-text-opacity:1;color:rgb(15 23 42 / var(--tw-text-opacity, 1))}.text-white{--tw-text-opacity:1;color:rgb(255 255 255 / var(--tw-text-opacity, 1))}.text-amber-700{--tw-text-opacity:1;color:rgb(180 83 9 / var(--tw-text-opacity, 1))}.text-orange-600{--tw-text-opacity:1;color:rgb(234 88 12 / var(--tw-text-opacity, 1))}.text-sky-700{--tw-text-opacity:1;color:rgb(3 105 161 / var(--tw-text-opacity, 1))}.antialiased{-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}.opacity-0{opacity:0}.opacity-80{opacity:0.8}.opacity-50{opacity:0.5}.shadow-2xl{--tw-shadow:0 25px 50px -12px rgb(0 0 0 / 0.25);--tw-shadow-colored:0 25px 50px -12px var(--tw-shadow-color);box-shadow:var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow)}.shadow-md{--tw-shadow:0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);--tw-shadow-colored:0 4px 6px -1px var(--tw-shadow-color), 0 2px 4px -2px var(--tw-shadow-color);box-shadow:var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow)}.shadow-sm{--tw-shadow:0 1px 2px 0 rgb(0 0 0 / 0.05);--tw-shadow-colored:0 1px 2px 0 var(--tw-shadow-color);box-shadow:var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow)}.shadow-blue-500\/20{--tw-shadow-color:rgb(59 130 246 / 0.2);--tw-shadow:var(--tw-shadow-colored)}.shadow-blue-600\/20{--tw-shadow-color:rgb(37 99 235 / 0.2);--tw-shadow:var(--tw-shadow-colored)}.backdrop-blur-md{--tw-backdrop-blur:blur(12px);-webkit-backdrop-filter:var(--tw-backdrop-blur) var(--tw-backdrop-brightness) var(--tw-backdrop-contrast) var(--tw-backdrop-grayscale) var(--tw-backdrop-hue-rotate) var(--tw-backdrop-invert) var(--tw-backdrop-opacity) var(--tw-backdrop-saturate) var(--tw-backdrop-sepia);backdrop-filter:var(--tw-backdrop-blur) var(--tw-backdrop-brightness) var(--tw-backdrop-contrast) var(--tw-backdrop-grayscale) var(--tw-backdrop-hue-rotate) var(--tw-backdrop-invert) var(--tw-backdrop-opacity) var(--tw-backdrop-saturate) var(--tw-backdrop-sepia)}.backdrop-blur-sm{--tw-backdrop-blur:blur(4px);-webkit-backdrop-filter:var(--tw-backdrop-blur) var(--tw-backdrop-brightness) var(--tw-backdrop-contrast) var(--tw-backdrop-grayscale) var(--tw-backdrop-hue-rotate) var(--tw-backdrop-invert) var(--tw-backdrop-opacity) var(--tw-backdrop-saturate) var(--tw-backdrop-sepia);backdrop-filter:var(--tw-backdrop-blur) var(--tw-backdrop-brightness) var(--tw-backdrop-contrast) var(--tw-backdrop-grayscale) var(--tw-backdrop-hue-rotate) var(--tw-backdrop-invert) var(--tw-backdrop-opacity) var(--tw-backdrop-saturate) var(--tw-backdrop-sepia)}.transition-all{transition-property:all;transition-timing-function:cubic-bezier(0.4, 0, 0.2, 1);transition-duration:150ms}.transition-colors{transition-property:color, background-color, border-color, fill, stroke, -webkit-text-decoration-color;transition-property:color, background-color, border-color, text-decoration-color, fill, stroke;transition-property:color, background-color, border-color, text-decoration-color, fill, stroke, -webkit-text-decoration-color;transition-timing-function:cubic-bezier(0.4, 0, 0.2, 1);transition-duration:150ms}.duration-200{transition-duration:200ms}.duration-300{transition-duration:300ms}.duration-500{transition-duration:500ms}.selection\:bg-blue-500 *::selection{--tw-bg-opacity:1;background-color:rgb(59 130 246 / var(--tw-bg-opacity, 1))}.selection\:text-white *::selection{--tw-text-opacity:1;color:rgb(255 255 255 / var(--tw-text-opacity, 1))}.selection\:bg-blue-500::selection{--tw-bg-opacity:1;background-color:rgb(59 130 246 / var(--tw-bg-opacity, 1))}.selection\:text-white::selection{--tw-text-opacity:1;color:rgb(255 255 255 / var(--tw-text-opacity, 1))}.hover\:border-amber-500\/40:hover{border-color:rgb(245 158 11 / 0.4)}.hover\:border-blue-500\/40:hover{border-color:rgb(59 130 246 / 0.4)}.hover\:border-emerald-500\/40:hover{border-color:rgb(16 185 129 / 0.4)}.hover\:bg-blue-500:hover{--tw-bg-opacity:1;background-color:rgb(59 130 246 / var(--tw-bg-opacity, 1))}.hover\:bg-slate-100:hover{--tw-bg-opacity:1;background-color:rgb(241 245 249 / var(--tw-bg-opacity, 1))}.hover\:bg-slate-200:hover{--tw-bg-opacity:1;background-color:rgb(226 232 240 / var(--tw-bg-opacity, 1))}.hover\:bg-slate-50\/90:hover{background-color:rgb(248 250 252 / 0.9)}.hover\:text-slate-600:hover{--tw-text-opacity:1;color:rgb(71 85 105 / var(--tw-text-opacity, 1))}.hover\:text-slate-900:hover{--tw-text-opacity:1;color:rgb(15 23 42 / var(--tw-text-opacity, 1))}.focus\:outline-none:focus{outline:2px solid transparent;outline-offset:2px}.focus\:ring-2:focus{--tw-ring-offset-shadow:var(--tw-ring-inset) 0 0 0 var(--tw-ring-offset-width) var(--tw-ring-offset-color);--tw-ring-shadow:var(--tw-ring-inset) 0 0 0 calc(2px + var(--tw-ring-offset-width)) var(--tw-ring-color);box-shadow:var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow, 0 0 #0000)}.focus\:ring-blue-500:focus{--tw-ring-opacity:1;--tw-ring-color:rgb(59 130 246 / var(--tw-ring-opacity, 1))}.dark\:divide-slateborder\/80:is(.dark *) > :not([hidden]) ~ :not([hidden]){border-color:rgb(30 41 59 / 0.8)}.dark\:border-slate-700:is(.dark *){--tw-border-opacity:1;border-color:rgb(51 65 85 / var(--tw-border-opacity, 1))}.dark\:border-slate-700\/80:is(.dark *){border-color:rgb(51 65 85 / 0.8)}.dark\:border-slateborder:is(.dark *){--tw-border-opacity:1;border-color:rgb(30 41 59 / var(--tw-border-opacity, 1))}.dark\:border-slateborder\/80:is(.dark *){border-color:rgb(30 41 59 / 0.8)}.dark\:bg-slate-800:is(.dark *){--tw-bg-opacity:1;background-color:rgb(30 41 59 / var(--tw-bg-opacity, 1))}.dark\:bg-slate-800\/50:is(.dark *){background-color:rgb(30 41 59 / 0.5)}.dark\:bg-slate-800\/60:is(.dark *){background-color:rgb(30 41 59 / 0.6)}.dark\:bg-slate-800\/90:is(.dark *){background-color:rgb(30 41 59 / 0.9)}.dark\:bg-slate-900:is(.dark *){--tw-bg-opacity:1;background-color:rgb(15 23 42 / var(--tw-bg-opacity, 1))}.dark\:bg-slatebg:is(.dark *){--tw-bg-opacity:1;background-color:rgb(9 13 22 / var(--tw-bg-opacity, 1))}.dark\:bg-slatebg\/85:is(.dark *){background-color:rgb(9 13 22 / 0.85)}.dark\:bg-slatecard:is(.dark *){--tw-bg-opacity:1;background-color:rgb(17 24 39 / var(--tw-bg-opacity, 1))}.dark\:bg-white:is(.dark *){--tw-bg-opacity:1;background-color:rgb(255 255 255 / var(--tw-bg-opacity, 1))}.dark\:bg-slate-600\/40:is(.dark *){background-color:rgb(71 85 105 / 0.4)}.dark\:text-amber-400:is(.dark *){--tw-text-opacity:1;color:rgb(251 191 36 / var(--tw-text-opacity, 1))}.dark\:text-blue-300:is(.dark *){--tw-text-opacity:1;color:rgb(147 197 253 / var(--tw-text-opacity, 1))}.dark\:text-blue-400:is(.dark *){--tw-text-opacity:1;color:rgb(96 165 250 / var(--tw-text-opacity, 1))}.dark\:text-emerald-400:is(.dark *){--tw-text-opacity:1;color:rgb(52 211 153 / var(--tw-text-opacity, 1))}.dark\:text-slate-100:is(.dark *){--tw-text-opacity:1;color:rgb(241 245 249 / var(--tw-text-opacity, 1))}.dark\:text-slate-200:is(.dark *){--tw-text-opacity:1;color:rgb(226 232 240 / var(--tw-text-opacity, 1))}.dark\:text-slate-300:is(.dark *){--tw-text-opacity:1;color:rgb(203 213 225 / var(--tw-text-opacity, 1))}.dark\:text-slate-400:is(.dark *){--tw-text-opacity:1;color:rgb(148 163 184 / var(--tw-text-opacity, 1))}.dark\:text-slate-900:is(.dark *){--tw-text-opacity:1;color:rgb(15 23 42 / var(--tw-text-opacity, 1))}.dark\:text-white:is(.dark *){--tw-text-opacity:1;color:rgb(255 255 255 / var(--tw-text-opacity, 1))}.dark\:text-orange-400:is(.dark *){--tw-text-opacity:1;color:rgb(251 146 60 / var(--tw-text-opacity, 1))}.dark\:text-sky-400:is(.dark *){--tw-text-opacity:1;color:rgb(56 189 248 / var(--tw-text-opacity, 1))}.dark\:hover\:bg-slate-700:hover:is(.dark *){--tw-bg-opacity:1;background-color:rgb(51 65 85 / var(--tw-bg-opacity, 1))}.dark\:hover\:bg-slate-800:hover:is(.dark *){--tw-bg-opacity:1;background-color:rgb(30 41 59 / var(--tw-bg-opacity, 1))}.dark\:hover\:bg-slate-800\/45:hover:is(.dark *){background-color:rgb(30 41 59 / 0.45)}.dark\:hover\:text-slate-200:hover:is(.dark *){--tw-text-opacity:1;color:rgb(226 232 240 / var(--tw-text-opacity, 1))}.dark\:hover\:text-white:hover:is(.dark *){--tw-text-opacity:1;color:rgb(255 255 255 / var(--tw-text-opacity, 1))}@media (min-width: 640px){.sm\:block{display:block}.sm\:w-32{width:8rem}.sm\:gap-5{gap:1.25rem}.sm\:p-6{padding:1.5rem}.sm\:p-8{padding:2rem}.sm\:px-5{padding-left:1.25rem;padding-right:1.25rem}.sm\:px-6{padding-left:1.5rem;padding-right:1.5rem}.sm\:py-8{padding-top:2rem;padding-bottom:2rem}.sm\:text-2xl{font-size:1.5rem;line-height:2rem}.sm\:text-lg{font-size:1.125rem;line-height:1.75rem}.sm\:text-sm{font-size:0.875rem;line-height:1.25rem}.sm\:text-base{font-size:1rem;line-height:1.5rem}}@media (min-width: 768px){.md\:inline-flex{display:inline-flex}.md\:table-cell{display:table-cell}.md\:hidden{display:none}.md\:grid-cols-3{grid-template-columns:repeat(3, minmax(0, 1fr))}}@media (min-width: 1024px){.lg\:w-72{width:18rem}.lg\:flex-row{flex-direction:row}.lg\:items-center{align-items:center}.lg\:px-8{padding-left:2rem;padding-right:2rem}}</style></head>
+<body class="bg-slate-50 text-slate-900 dark:bg-slatebg dark:text-slate-100 transition-colors duration-200 min-h-screen font-sans antialiased selection:bg-blue-500 selection:text-white">
+
+  <!-- Toast Notification Container (No alert() used) -->
+  <div id="toast" class="fixed bottom-5 right-5 z-50 transform translate-y-20 opacity-0 transition-all duration-300 pointer-events-none">
+    <div class="bg-slate-900 dark:bg-slate-800 text-white border border-slate-700 px-4 py-3 rounded-xl shadow-2xl flex items-center space-x-2.5 text-sm font-medium">
+      <span id="toastIcon" class="text-emerald-400">✓</span>
+      <span id="toastMsg">操作成功</span>
+    </div>
+  </div>
+
+  <!-- Deploy Guide Modal -->
+  <div id="deployModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/70 backdrop-blur-sm p-4">
+    <div class="bg-white dark:bg-slatecard border border-slate-200 dark:border-slateborder rounded-2xl max-w-2xl w-full p-6 sm:p-8 shadow-2xl relative max-h-[90vh] overflow-y-auto">
+      <button id="closeDeployModal" class="absolute top-5 right-5 w-9 h-9 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 flex items-center justify-center text-slate-500 dark:text-slate-300 transition-colors">
+        ✕
+      </button>
+      <div class="flex items-center space-x-2.5 mb-4">
+        <span class="px-2.5 py-1 rounded-lg bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 text-xs font-bold">免费托管教程</span>
+        <h3 class="text-xl font-bold">3 分钟上线到 GitHub Pages &amp; 绑定独立域名</h3>
+      </div>
+      
+      <div class="space-y-5 text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+        <div class="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/80">
+          <div class="font-bold text-slate-900 dark:text-white mb-1">第 1 步：下载当前网页文件</div>
+          <p>点击页面右上角的 <span class="font-semibold text-blue-600 dark:text-blue-400">“下载 index.html”</span> 按钮，将完整的单文件网页保存到本地电脑。</p>
+        </div>
+
+        <div class="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/80">
+          <div class="font-bold text-slate-900 dark:text-white mb-1">第 2 步：创建免费 GitHub 公开仓库</div>
+          <ol class="list-decimal list-inside space-y-1">
+            <li>登录 GitHub，点击右上角 <strong>+</strong> → <strong>New repository</strong>。</li>
+            <li>仓库名称填写 <code class="px-1.5 py-0.5 rounded bg-slate-200 dark:bg-slate-900 font-mono text-xs text-blue-500">你的用户名.github.io</code>，权限选择 <strong>Public</strong>。</li>
+            <li>点击 <strong>uploading an existing file</strong>，把刚下载的 <code class="font-mono text-xs">index.html</code> 拖进去并点击 <strong>Commit changes</strong>。</li>
+            <li>等待 30 秒，直接访问 <code class="font-mono text-xs text-emerald-500">https://你的用户名.github.io/</code> 即可免费查看！</li>
+          </ol>
+        </div>
+
+        <div class="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/80">
+          <div class="font-bold text-slate-900 dark:text-white mb-1">第 3 步：（可选）绑定你自己的独立域名</div>
+          <ul class="list-disc list-inside space-y-1">
+            <li><strong>二级域名（推荐，如 ai.yourdomain.com）</strong>：去域名商 DNS 后台添加一条 <code class="font-mono text-xs">CNAME</code> 记录，主机填 <code class="font-mono text-xs">ai</code>，指向 <code class="font-mono text-xs">你的用户名.github.io</code>。</li>
+            <li><strong>根域名（如 yourdomain.com）</strong>：添加 4 条 <code class="font-mono text-xs">A</code> 记录（主机 <code class="font-mono text-xs">@</code>），分别指向 <code class="font-mono text-xs">185.199.108.153</code> ~ <code class="font-mono text-xs">111.153</code>。</li>
+            <li>回到 GitHub 仓库 → <strong>Settings</strong> → <strong>Pages</strong> → <strong>Custom domain</strong> 输入你的域名并保存，勾选 <strong>Enforce HTTPS</strong> 即可获得免费 SSL 证书。</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="mt-6 flex justify-end space-x-3">
+        <button id="modalDownloadBtn" class="px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-sm font-semibold shadow-sm transition-colors">
+          立即下载 index.html
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Top Navigation Header -->
+  <header class="sticky top-0 z-30 border-b border-slate-200/80 dark:border-slateborder/80 bg-white/85 dark:bg-slatebg/85 backdrop-blur-md">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-2">
+      <!-- Brand Title -->
+      <div class="flex items-center space-x-3 min-w-0">
+        <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center text-white font-bold shadow-md shadow-blue-500/20 shrink-0">
+          AI
+        </div>
+        <div class="truncate">
+          <div class="flex items-center space-x-2">
+            <h1 class="text-base sm:text-lg font-extrabold tracking-tight truncate">LLM Leaderboard</h1>
+            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 shrink-0">
+              <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-1.5 animate-pulse"></span>
+              2026.11 快照
+            </span>
+          </div>
+          <p class="text-xs text-slate-500 dark:text-slate-400 hidden sm:block">全网主流大模型综合能力与垂直专项权威榜单汇总</p>
+        </div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="flex items-center space-x-2 shrink-0">
+        <button id="openDeployBtn" class="px-3 py-2 rounded-xl text-xs sm:text-sm font-medium bg-slate-100 dark:bg-slate-800/90 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 transition-colors">
+          🚀 部署指南
+        </button>
+        <button id="copySourceBtn" class="hidden md:inline-flex items-center px-3 py-2 rounded-xl text-sm font-medium bg-slate-100 dark:bg-slate-800/90 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 transition-colors">
+          📋 复制源码
+        </button>
+        <button id="downloadHtmlBtn" class="px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold bg-blue-600 hover:bg-blue-500 text-white shadow-sm shadow-blue-600/20 transition-colors">
+          ⬇️ 下载 index.html
+        </button>
+        <button id="themeToggle" title="切换深色/浅色主题" class="p-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slatecard hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+          <span id="themeIcon">☀️</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+
+    <!-- 3 Key Summary Cards -->
+    <section class="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-5 mb-8">
+      <!-- Card 1 -->
+      <div class="group relative overflow-hidden p-5 sm:p-6 rounded-2xl bg-white dark:bg-slatecard border border-slate-200 dark:border-slateborder shadow-sm hover:border-blue-500/40 transition-all">
+        <div class="flex items-center justify-between mb-2">
+          <span class="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">综合盲测榜首 (LMArena)</span>
+          <span class="px-2 py-0.5 rounded-md text-xs font-mono font-bold bg-blue-500/10 text-blue-600 dark:text-blue-400">Elo 1527</span>
+        </div>
+        <div class="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white tracking-tight">
+          Gemini 4 Carbon <span class="text-xs font-normal text-slate-400">(High)</span>
+        </div>
+        <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-2 flex items-center">
+          <span class="inline-block w-2 h-2 rounded-full bg-blue-500 mr-2"></span>
+          Google Gemini 4 家族包揽前三席位
+        </p>
+      </div>
+
+      <!-- Card 2 -->
+      <div class="group relative overflow-hidden p-5 sm:p-6 rounded-2xl bg-white dark:bg-slatecard border border-slate-200 dark:border-slateborder shadow-sm hover:border-amber-500/40 transition-all">
+        <div class="flex items-center justify-between mb-2">
+          <span class="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">工程代码榜首 (WebDev)</span>
+          <span class="px-2 py-0.5 rounded-md text-xs font-mono font-bold bg-amber-500/10 text-amber-600 dark:text-amber-400">Elo 1810</span>
+        </div>
+        <div class="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white tracking-tight">
+          Claude Opus 5.5
+        </div>
+        <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-2 flex items-center">
+          <span class="inline-block w-2 h-2 rounded-full bg-amber-500 mr-2"></span>
+          复杂代码架构与 Agent 工程首选
+        </p>
+      </div>
+
+      <!-- Card 3 -->
+      <div class="group relative overflow-hidden p-5 sm:p-6 rounded-2xl bg-white dark:bg-slatecard border border-slate-200 dark:border-slateborder shadow-sm hover:border-emerald-500/40 transition-all">
+        <div class="flex items-center justify-between mb-2">
+          <span class="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">国产与开源第一梯队</span>
+          <span class="px-2 py-0.5 rounded-md text-xs font-mono font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">Elo 1511~1512</span>
+        </div>
+        <div class="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white tracking-tight">
+          Kimi-K3.1-Pro / Qwen4-Max
+        </div>
+        <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-2 flex items-center">
+          <span class="inline-block w-2 h-2 rounded-full bg-emerald-500 mr-2"></span>
+          全面站稳 1500 大关，紧咬海外闭源旗舰
+        </p>
+      </div>
+    </section>
+
+    <!-- Leaderboard Category Tabs -->
+    <section class="mb-5">
+      <div class="flex flex-wrap gap-2" id="categoryTabs">
+        <button data-tab="arena" class="cat-tab px-4 py-2.5 rounded-xl text-sm font-semibold bg-blue-600 text-white shadow-sm shadow-blue-600/20 transition-all">
+          🏆 综合盲测榜 (LMArena)
+        </button>
+        <button data-tab="intelligence" class="cat-tab px-4 py-2.5 rounded-xl text-sm font-medium bg-white dark:bg-slatecard text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slateborder hover:bg-slate-100 dark:hover:bg-slate-800 transition-all">
+          🧠 综合智力指数 (AA v5)
+        </button>
+        <button data-tab="webdev" class="cat-tab px-4 py-2.5 rounded-xl text-sm font-medium bg-white dark:bg-slatecard text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slateborder hover:bg-slate-100 dark:hover:bg-slate-800 transition-all">
+          💻 代码与工程专项 (WebDev)
+        </button>
+        <button data-tab="opensource" class="cat-tab px-4 py-2.5 rounded-xl text-sm font-medium bg-white dark:bg-slatecard text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slateborder hover:bg-slate-100 dark:hover:bg-slate-800 transition-all">
+          🇨🇳 国产与开源第一梯队
+        </button>
+      </div>
+    </section>
+
+    <!-- Filter & Search Bar -->
+    <section class="flex flex-col lg:flex-row lg:items-center justify-between gap-3 mb-5 p-3.5 rounded-2xl bg-white dark:bg-slatecard border border-slate-200 dark:border-slateborder">
+      <!-- Provider Quick Filters -->
+      <div class="flex flex-wrap items-center gap-1.5" id="vendorFilters">
+        <span class="text-xs font-medium text-slate-400 mr-1.5">厂商筛选:</span>
+        <button data-vendor="ALL" class="vendor-btn px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-900 text-white dark:bg-white dark:text-slate-900 transition-colors">
+          全部
+        </button>
+        <button data-vendor="Google" class="vendor-btn px-3 py-1.5 rounded-lg text-xs font-medium bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors">
+          Google
+        </button>
+        <button data-vendor="Anthropic" class="vendor-btn px-3 py-1.5 rounded-lg text-xs font-medium bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors">
+          Anthropic
+        </button>
+        <button data-vendor="OpenAI" class="vendor-btn px-3 py-1.5 rounded-lg text-xs font-medium bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors">
+          OpenAI
+        </button>
+        <button data-vendor="Meta" class="vendor-btn px-3 py-1.5 rounded-lg text-xs font-medium bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors">
+          Meta
+        </button>
+        <button data-vendor="CN_OS" class="vendor-btn px-3 py-1.5 rounded-lg text-xs font-medium bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors">
+          国产开源
+        </button>
+      </div>
+
+      <!-- Search Input -->
+      <div class="relative w-full lg:w-72">
+        <span class="absolute inset-y-0 left-3 flex items-center text-slate-400 text-sm">🔍</span>
+        <input type="text" id="searchInput" placeholder="搜索模型名称、特性或厂商..." class="w-full pl-9 pr-8 py-2 rounded-xl text-sm bg-slate-50 dark:bg-slatebg border border-slate-200 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all">
+        <button id="clearSearchBtn" class="hidden absolute inset-y-0 right-2.5 flex items-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-xs">
+          ✕
+        </button>
+      </div>
+    </section>
+
+    <!-- Leaderboard Description Banner -->
+    <div id="tabDescBanner" class="mb-4 px-4 py-2.5 rounded-xl bg-blue-500/10 border border-blue-500/20 text-xs sm:text-sm text-blue-700 dark:text-blue-300 flex items-center justify-between">
+      <span id="tabDescText">LMArena Text Arena (11月快照)：基于全球真实用户双盲对比投票的 Elo 评分，直接反映日常对话、复杂推理与指令遵循体感。</span>
+      <span id="resultCount" class="font-mono text-xs opacity-80 shrink-0 ml-2">显示 10 / 10 款模型</span>
+    </div>
+
+    <!-- Main Data Table -->
+    <section class="overflow-hidden rounded-2xl border border-slate-200 dark:border-slateborder bg-white dark:bg-slatecard shadow-sm">
+      <div class="overflow-x-auto">
+        <table class="w-full text-left border-collapse">
+          <thead>
+            <tr class="border-b border-slate-200 dark:border-slateborder text-xs uppercase tracking-wider text-slate-500 dark:text-slate-400 bg-slate-50/80 dark:bg-slate-800/50 select-none">
+              <th id="sortRankHeader" class="py-4 px-4 sm:px-5 w-20 cursor-pointer hover:text-slate-900 dark:hover:text-white transition-colors">
+                <div class="flex items-center space-x-1">
+                  <span>排名</span>
+                  <span id="rankSortIcon" class="text-slate-400 opacity-50">↕</span>
+                </div>
+              </th>
+              <th class="py-4 px-4 sm:px-5">模型名称</th>
+              <th class="py-4 px-4 sm:px-5">研发厂商</th>
+              <th id="sortScoreHeader" class="py-4 px-4 sm:px-5 cursor-pointer hover:text-slate-900 dark:hover:text-white transition-colors">
+                <div class="flex items-center space-x-1.5">
+                  <span id="scoreColumnTitle">Arena Elo 分数</span>
+                  <span id="scoreSortIcon" class="text-blue-500 font-bold">↓</span>
+                </div>
+              </th>
+              <th class="py-4 px-4 sm:px-5 hidden md:table-cell">核心定位与特点</th>
+            </tr>
+          </thead>
+          <tbody id="leaderboardBody" class="divide-y divide-slate-100 dark:divide-slateborder/80 text-sm">
+          <tr class="hover:bg-slate-50/90 dark:hover:bg-slate-800/45 transition-colors group">
+            <td class="py-4 px-4 sm:px-5 whitespace-nowrap">
+              <span class="inline-flex items-center justify-center w-7 h-7 rounded-lg text-xs font-mono font-extrabold bg-amber-500/20 text-amber-600 dark:text-amber-400 border border-amber-500/30 shadow-sm">1</span>
+            </td>
+            <td class="py-4 px-4 sm:px-5">
+              <div class="font-bold text-slate-900 dark:text-white flex items-center flex-wrap">
+                <span>Gemini 4 Carbon (High)</span>
+                
+              </div>
+              <div class="text-xs text-slate-500 dark:text-slate-400 mt-1 md:hidden">全能旗舰天花板，长程复杂推理与多模态第一</div>
+            </td>
+            <td class="py-4 px-4 sm:px-5 whitespace-nowrap">
+              <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold border bg-blue-500/12 text-blue-600 dark:text-blue-400 border-blue-500/25">
+                Google
+              </span>
+            </td>
+            <td class="py-4 px-4 sm:px-5 whitespace-nowrap">
+              <div class="flex items-center space-x-3">
+                <span class="font-mono font-extrabold text-sm sm:text-base text-slate-900 dark:text-slate-100 w-12">1527</span>
+                <div class="w-24 sm:w-32 h-2.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden hidden sm:block">
+                  <div class="h-full rounded-full bg-gradient-to-r from-blue-500 to-indigo-500 transition-all duration-500" style="width: 88.1%"></div>
+                </div>
+              </div>
+            </td>
+            <td class="py-4 px-4 sm:px-5 text-slate-600 dark:text-slate-300 hidden md:table-cell leading-relaxed">
+              全能旗舰天花板，长程复杂推理与多模态第一
+            </td>
+          </tr>
+        
+          <tr class="hover:bg-slate-50/90 dark:hover:bg-slate-800/45 transition-colors group">
+            <td class="py-4 px-4 sm:px-5 whitespace-nowrap">
+              <span class="inline-flex items-center justify-center w-7 h-7 rounded-lg text-xs font-mono font-extrabold bg-slate-300/30 dark:bg-slate-600/40 text-slate-700 dark:text-slate-200 border border-slate-400/30">2</span>
+            </td>
+            <td class="py-4 px-4 sm:px-5">
+              <div class="font-bold text-slate-900 dark:text-white flex items-center flex-wrap">
+                <span>Gemini 4 Argon (High)</span>
+                
+              </div>
+              <div class="text-xs text-slate-500 dark:text-slate-400 mt-1 md:hidden">主力均衡版，指令遵循与多语言极强</div>
+            </td>
+            <td class="py-4 px-4 sm:px-5 whitespace-nowrap">
+              <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold border bg-blue-500/12 text-blue-600 dark:text-blue-400 border-blue-500/25">
+                Google
+              </span>
+            </td>
+            <td class="py-4 px-4 sm:px-5 whitespace-nowrap">
+              <div class="flex items-center space-x-3">
+                <span class="font-mono font-extrabold text-sm sm:text-base text-slate-900 dark:text-slate-100 w-12">1520</span>
+                <div class="w-24 sm:w-32 h-2.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden hidden sm:block">
+                  <div class="h-full rounded-full bg-gradient-to-r from-blue-500 to-indigo-500 transition-all duration-500" style="width: 71.4%"></div>
+                </div>
+              </div>
+            </td>
+            <td class="py-4 px-4 sm:px-5 text-slate-600 dark:text-slate-300 hidden md:table-cell leading-relaxed">
+              主力均衡版，指令遵循与多语言极强
+            </td>
+          </tr>
+        
+          <tr class="hover:bg-slate-50/90 dark:hover:bg-slate-800/45 transition-colors group">
+            <td class="py-4 px-4 sm:px-5 whitespace-nowrap">
+              <span class="inline-flex items-center justify-center w-7 h-7 rounded-lg text-xs font-mono font-extrabold bg-orange-500/15 text-orange-600 dark:text-orange-400 border border-orange-500/25">3</span>
+            </td>
+            <td class="py-4 px-4 sm:px-5">
+              <div class="font-bold text-slate-900 dark:text-white flex items-center flex-wrap">
+                <span>Gemini 4 Neon (High)</span>
+                
+              </div>
+              <div class="text-xs text-slate-500 dark:text-slate-400 mt-1 md:hidden">新发实战派，Coding Agent 性价比极高 ($1.5/$7.5)</div>
+            </td>
+            <td class="py-4 px-4 sm:px-5 whitespace-nowrap">
+              <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold border bg-blue-500/12 text-blue-600 dark:text-blue-400 border-blue-500/25">
+                Google
+              </span>
+            </td>
+            <td class="py-4 px-4 sm:px-5 whitespace-nowrap">
+              <div class="flex items-center space-x-3">
+                <span class="font-mono font-extrabold text-sm sm:text-base text-slate-900 dark:text-slate-100 w-12">1513</span>
+                <div class="w-24 sm:w-32 h-2.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden hidden sm:block">
+                  <div class="h-full rounded-full bg-gradient-to-r from-blue-500 to-indigo-500 transition-all duration-500" style="width: 54.8%"></div>
+                </div>
+              </div>
+            </td>
+            <td class="py-4 px-4 sm:px-5 text-slate-600 dark:text-slate-300 hidden md:table-cell leading-relaxed">
+              新发实战派，Coding Agent 性价比极高 ($1.5/$7.5)
+            </td>
+          </tr>
+        
+          <tr class="hover:bg-slate-50/90 dark:hover:bg-slate-800/45 transition-colors group">
+            <td class="py-4 px-4 sm:px-5 whitespace-nowrap">
+              <span class="inline-flex items-center justify-center w-7 h-7 rounded-lg text-xs font-mono font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">4</span>
+            </td>
+            <td class="py-4 px-4 sm:px-5">
+              <div class="font-bold text-slate-900 dark:text-white flex items-center flex-wrap">
+                <span>Muse Wonder (Max)</span>
+                
+              </div>
+              <div class="text-xs text-slate-500 dark:text-slate-400 mt-1 md:hidden">Meta 新一代旗舰黑马</div>
+            </td>
+            <td class="py-4 px-4 sm:px-5 whitespace-nowrap">
+              <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold border bg-sky-500/12 text-sky-700 dark:text-sky-400 border-sky-500/25">
+                Meta
+              </span>
+            </td>
+            <td class="py-4 px-4 sm:px-5 whitespace-nowrap">
+              <div class="flex items-center space-x-3">
+                <span class="font-mono font-extrabold text-sm sm:text-base text-slate-900 dark:text-slate-100 w-12">1511</span>
+                <div class="w-24 sm:w-32 h-2.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden hidden sm:block">
+                  <div class="h-full rounded-full bg-gradient-to-r from-sky-500 to-cyan-500 transition-all duration-500" style="width: 50.0%"></div>
+                </div>
+              </div>
+            </td>
+            <td class="py-4 px-4 sm:px-5 text-slate-600 dark:text-slate-300 hidden md:table-cell leading-relaxed">
+              Meta 新一代旗舰黑马
+            </td>
+          </tr>
+        
+          <tr class="hover:bg-slate-50/90 dark:hover:bg-slate-800/45 transition-colors group">
+            <td class="py-4 px-4 sm:px-5 whitespace-nowrap">
+              <span class="inline-flex items-center justify-center w-7 h-7 rounded-lg text-xs font-mono font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">5</span>
+            </td>
+            <td class="py-4 px-4 sm:px-5">
+              <div class="font-bold text-slate-900 dark:text-white flex items-center flex-wrap">
+                <span>Claude Opus 5.5 (High)</span>
+                
+              </div>
+              <div class="text-xs text-slate-500 dark:text-slate-400 mt-1 md:hidden">代码与复杂工程标杆，此前长期霸榜</div>
+            </td>
+            <td class="py-4 px-4 sm:px-5 whitespace-nowrap">
+              <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold border bg-amber-500/12 text-amber-700 dark:text-amber-400 border-amber-500/25">
+                Anthropic
+              </span>
+            </td>
+            <td class="py-4 px-4 sm:px-5 whitespace-nowrap">
+              <div class="flex items-center space-x-3">
+                <span class="font-mono font-extrabold text-sm sm:text-base text-slate-900 dark:text-slate-100 w-12">1506</span>
+                <div class="w-24 sm:w-32 h-2.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden hidden sm:block">
+                  <div class="h-full rounded-full bg-gradient-to-r from-amber-500 to-orange-500 transition-all duration-500" style="width: 38.1%"></div>
+                </div>
+              </div>
+            </td>
+            <td class="py-4 px-4 sm:px-5 text-slate-600 dark:text-slate-300 hidden md:table-cell leading-relaxed">
+              代码与复杂工程标杆，此前长期霸榜
+            </td>
+          </tr>
+        
+          <tr class="hover:bg-slate-50/90 dark:hover:bg-slate-800/45 transition-colors group">
+            <td class="py-4 px-4 sm:px-5 whitespace-nowrap">
+              <span class="inline-flex items-center justify-center w-7 h-7 rounded-lg text-xs font-mono font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">6</span>
+            </td>
+            <td class="py-4 px-4 sm:px-5">
+              <div class="font-bold text-slate-900 dark:text-white flex items-center flex-wrap">
+                <span>Claude Fable 5 (High)</span>
+                
+              </div>
+              <div class="text-xs text-slate-500 dark:text-slate-400 mt-1 md:hidden">擅长深度长文创作与人文推理</div>
+            </td>
+            <td class="py-4 px-4 sm:px-5 whitespace-nowrap">
+              <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold border bg-amber-500/12 text-amber-700 dark:text-amber-400 border-amber-500/25">
+                Anthropic
+              </span>
+            </td>
+            <td class="py-4 px-4 sm:px-5 whitespace-nowrap">
+              <div class="flex items-center space-x-3">
+                <span class="font-mono font-extrabold text-sm sm:text-base text-slate-900 dark:text-slate-100 w-12">1504</span>
+                <div class="w-24 sm:w-32 h-2.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden hidden sm:block">
+                  <div class="h-full rounded-full bg-gradient-to-r from-amber-500 to-orange-500 transition-all duration-500" style="width: 33.3%"></div>
+                </div>
+              </div>
+            </td>
+            <td class="py-4 px-4 sm:px-5 text-slate-600 dark:text-slate-300 hidden md:table-cell leading-relaxed">
+              擅长深度长文创作与人文推理
+            </td>
+          </tr>
+        
+          <tr class="hover:bg-slate-50/90 dark:hover:bg-slate-800/45 transition-colors group">
+            <td class="py-4 px-4 sm:px-5 whitespace-nowrap">
+              <span class="inline-flex items-center justify-center w-7 h-7 rounded-lg text-xs font-mono font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">7</span>
+            </td>
+            <td class="py-4 px-4 sm:px-5">
+              <div class="font-bold text-slate-900 dark:text-white flex items-center flex-wrap">
+                <span>Claude Fable 5.2 (Max)</span>
+                
+              </div>
+              <div class="text-xs text-slate-500 dark:text-slate-400 mt-1 md:hidden">高算力推理强化版</div>
+            </td>
+            <td class="py-4 px-4 sm:px-5 whitespace-nowrap">
+              <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold border bg-amber-500/12 text-amber-700 dark:text-amber-400 border-amber-500/25">
+                Anthropic
+              </span>
+            </td>
+            <td class="py-4 px-4 sm:px-5 whitespace-nowrap">
+              <div class="flex items-center space-x-3">
+                <span class="font-mono font-extrabold text-sm sm:text-base text-slate-900 dark:text-slate-100 w-12">1503</span>
+                <div class="w-24 sm:w-32 h-2.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden hidden sm:block">
+                  <div class="h-full rounded-full bg-gradient-to-r from-amber-500 to-orange-500 transition-all duration-500" style="width: 31.0%"></div>
+                </div>
+              </div>
+            </td>
+            <td class="py-4 px-4 sm:px-5 text-slate-600 dark:text-slate-300 hidden md:table-cell leading-relaxed">
+              高算力推理强化版
+            </td>
+          </tr>
+        
+          <tr class="hover:bg-slate-50/90 dark:hover:bg-slate-800/45 transition-colors group">
+            <td class="py-4 px-4 sm:px-5 whitespace-nowrap">
+              <span class="inline-flex items-center justify-center w-7 h-7 rounded-lg text-xs font-mono font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">8</span>
+            </td>
+            <td class="py-4 px-4 sm:px-5">
+              <div class="font-bold text-slate-900 dark:text-white flex items-center flex-wrap">
+                <span>Claude Opus 4.6 (High)</span>
+                
+              </div>
+              <div class="text-xs text-slate-500 dark:text-slate-400 mt-1 md:hidden">上代经典主力</div>
+            </td>
+            <td class="py-4 px-4 sm:px-5 whitespace-nowrap">
+              <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold border bg-amber-500/12 text-amber-700 dark:text-amber-400 border-amber-500/25">
+                Anthropic
+              </span>
+            </td>
+            <td class="py-4 px-4 sm:px-5 whitespace-nowrap">
+              <div class="flex items-center space-x-3">
+                <span class="font-mono font-extrabold text-sm sm:text-base text-slate-900 dark:text-slate-100 w-12">1503</span>
+                <div class="w-24 sm:w-32 h-2.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden hidden sm:block">
+                  <div class="h-full rounded-full bg-gradient-to-r from-amber-500 to-orange-500 transition-all duration-500" style="width: 31.0%"></div>
+                </div>
+              </div>
+            </td>
+            <td class="py-4 px-4 sm:px-5 text-slate-600 dark:text-slate-300 hidden md:table-cell leading-relaxed">
+              上代经典主力
+            </td>
+          </tr>
+        
+          <tr class="hover:bg-slate-50/90 dark:hover:bg-slate-800/45 transition-colors group">
+            <td class="py-4 px-4 sm:px-5 whitespace-nowrap">
+              <span class="inline-flex items-center justify-center w-7 h-7 rounded-lg text-xs font-mono font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">9</span>
+            </td>
+            <td class="py-4 px-4 sm:px-5">
+              <div class="font-bold text-slate-900 dark:text-white flex items-center flex-wrap">
+                <span>Muse Spark 1.3 (Max)</span>
+                
+              </div>
+              <div class="text-xs text-slate-500 dark:text-slate-400 mt-1 md:hidden">高性价比主力模型</div>
+            </td>
+            <td class="py-4 px-4 sm:px-5 whitespace-nowrap">
+              <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold border bg-sky-500/12 text-sky-700 dark:text-sky-400 border-sky-500/25">
+                Meta
+              </span>
+            </td>
+            <td class="py-4 px-4 sm:px-5 whitespace-nowrap">
+              <div class="flex items-center space-x-3">
+                <span class="font-mono font-extrabold text-sm sm:text-base text-slate-900 dark:text-slate-100 w-12">1498</span>
+                <div class="w-24 sm:w-32 h-2.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden hidden sm:block">
+                  <div class="h-full rounded-full bg-gradient-to-r from-sky-500 to-cyan-500 transition-all duration-500" style="width: 19.0%"></div>
+                </div>
+              </div>
+            </td>
+            <td class="py-4 px-4 sm:px-5 text-slate-600 dark:text-slate-300 hidden md:table-cell leading-relaxed">
+              高性价比主力模型
+            </td>
+          </tr>
+        
+          <tr class="hover:bg-slate-50/90 dark:hover:bg-slate-800/45 transition-colors group">
+            <td class="py-4 px-4 sm:px-5 whitespace-nowrap">
+              <span class="inline-flex items-center justify-center w-7 h-7 rounded-lg text-xs font-mono font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">10</span>
+            </td>
+            <td class="py-4 px-4 sm:px-5">
+              <div class="font-bold text-slate-900 dark:text-white flex items-center flex-wrap">
+                <span>Gemini 3.8 Flash (High)</span>
+                
+              </div>
+              <div class="text-xs text-slate-500 dark:text-slate-400 mt-1 md:hidden">极致高速与低成本日常模型</div>
+            </td>
+            <td class="py-4 px-4 sm:px-5 whitespace-nowrap">
+              <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold border bg-blue-500/12 text-blue-600 dark:text-blue-400 border-blue-500/25">
+                Google
+              </span>
+            </td>
+            <td class="py-4 px-4 sm:px-5 whitespace-nowrap">
+              <div class="flex items-center space-x-3">
+                <span class="font-mono font-extrabold text-sm sm:text-base text-slate-900 dark:text-slate-100 w-12">1497</span>
+                <div class="w-24 sm:w-32 h-2.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden hidden sm:block">
+                  <div class="h-full rounded-full bg-gradient-to-r from-blue-500 to-indigo-500 transition-all duration-500" style="width: 16.7%"></div>
+                </div>
+              </div>
+            </td>
+            <td class="py-4 px-4 sm:px-5 text-slate-600 dark:text-slate-300 hidden md:table-cell leading-relaxed">
+              极致高速与低成本日常模型
+            </td>
+          </tr>
+        </tbody>
+        </table>
+      </div>
+
+      <!-- Empty State -->
+      <div id="emptyState" class="hidden py-14 px-4 text-center">
+        <div class="text-3xl mb-2">📭</div>
+        <div class="text-base font-semibold text-slate-700 dark:text-slate-200">未找到匹配的模型</div>
+        <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">尝试切换其他榜单分类，或清除当前的厂商与关键词筛选。</p>
+        <button id="resetFiltersBtn" class="mt-4 px-4 py-2 rounded-xl bg-blue-600 text-white text-xs font-semibold hover:bg-blue-500 transition-colors">
+          重置所有筛选
+        </button>
+      </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="mt-10 pb-6 text-center text-xs text-slate-500 dark:text-slate-400 space-y-1.5">
+      <p>LLM Leaderboard · 2026年11月主流大模型综合与专项榜单数据快照</p>
+      <p>单文件纯静态架构 · 零后端依赖 · 支持 GitHub Pages 一键部署与自定义域名</p>
+    </footer>
+  </main>
+
+  <script>
+    // =========================================================================
+    // 1. Complete Dataset (November 2026 Snapshot)
+    // =========================================================================
+    const LEADERBOARD_DATA = {
+      arena: {
+        title: "综合盲测榜 (LMArena)",
+        scoreLabel: "Arena Elo 分数",
+        description: "LMArena Text Arena (11月快照)：基于全球真实用户双盲对比投票的 Elo 评分，直接反映日常对话、复杂推理与指令遵循体感。",
+        minScore: 1490,
+        maxScore: 1532,
+        items: [
+          { rank: 1, model: "Gemini 4 Carbon (High)", org: "Google", group: "Google", score: 1527, note: "全能旗舰天花板，长程复杂推理与多模态第一" },
+          { rank: 2, model: "Gemini 4 Argon (High)", org: "Google", group: "Google", score: 1520, note: "主力均衡版，指令遵循与多语言极强" },
+          { rank: 3, model: "Gemini 4 Neon (High)", org: "Google", group: "Google", score: 1513, note: "新发实战派，Coding Agent 性价比极高 ($1.5/$7.5)" },
+          { rank: 4, model: "Muse Wonder (Max)", org: "Meta", group: "Meta", score: 1511, note: "Meta 新一代旗舰黑马" },
+          { rank: 5, model: "Claude Opus 5.5 (High)", org: "Anthropic", group: "Anthropic", score: 1506, note: "代码与复杂工程标杆，此前长期霸榜" },
+          { rank: 6, model: "Claude Fable 5 (High)", org: "Anthropic", group: "Anthropic", score: 1504, note: "擅长深度长文创作与人文推理" },
+          { rank: 7, model: "Claude Fable 5.2 (Max)", org: "Anthropic", group: "Anthropic", score: 1503, note: "高算力推理强化版" },
+          { rank: 8, model: "Claude Opus 4.6 (High)", org: "Anthropic", group: "Anthropic", score: 1503, note: "上代经典主力" },
+          { rank: 9, model: "Muse Spark 1.3 (Max)", org: "Meta", group: "Meta", score: 1498, note: "高性价比主力模型" },
+          { rank: 10, model: "Gemini 3.8 Flash (High)", org: "Google", group: "Google", score: 1497, note: "极致高速与低成本日常模型" }
+        ]
+      },
+      intelligence: {
+        title: "综合智力指数 (AA v5)",
+        scoreLabel: "智力指数得分",
+        description: "Artificial Analysis Intelligence Index v5 (11月快照)：剔除主观偏好，通过高难度理科、数学、逻辑与代码客观评测集算出的硬核智商排名。",
+        minScore: 51.0,
+        maxScore: 60.5,
+        items: [
+          { rank: 1, model: "Gemini 4 Carbon (High)", org: "Google", group: "Google", score: 59.4, note: "硬核客观理科/代码综合跑分第一" },
+          { rank: 2, model: "Claude Opus 5.5 (Max)", org: "Anthropic", group: "Anthropic", score: 58.4, note: "实际体验与榜首几乎无差" },
+          { rank: 3, model: "GPT-6 Astra (Max)", org: "OpenAI", group: "OpenAI", score: 56.9, note: "OpenAI 当前最高算力推理旗舰" },
+          { rank: 4, model: "GPT-6.1 Sol", org: "OpenAI", group: "OpenAI", score: 54.5, note: "兼顾响应速度与复杂逻辑" },
+          { rank: 5, model: "Claude Sonnet 5.5", org: "Anthropic", group: "Anthropic", score: 54.2, note: "中杯尺寸跨级打大杯" }
+        ]
+      },
+      webdev: {
+        title: "代码与工程专项 (WebDev)",
+        scoreLabel: "WebDev Elo 分数",
+        description: "LMArena WebDev Arena (11月快照)：专注于前端界面构建、全栈项目重构、复杂系统排错与智能体（Agent）编程的权威实战榜单。",
+        minScore: 1750,
+        maxScore: 1820,
+        items: [
+          { rank: 1, model: "Claude Opus 5.5", org: "Anthropic", group: "Anthropic", score: 1810, note: "前端重构、全栈工程与 Agent 编程公认第一" },
+          { rank: 2, model: "GPT-6 Astra", org: "OpenAI", group: "OpenAI", score: 1773, note: "复杂系统架构与疑难 Bug 排查能力强" },
+          { rank: 3, model: "Claude Sonnet 5.5", org: "Anthropic", group: "Anthropic", score: 1770, note: "日常写代码与 IDE 补全性价比首选" }
+        ]
+      },
+      opensource: {
+        title: "国产与开源第一梯队",
+        scoreLabel: "综合评估 Elo",
+        description: "11月中旬国产及开源阵营头部综合定位：全系站稳 Elo 1500 大关，与海外闭源旗舰差距已缩小至 15–20 分以内。",
+        minScore: 1495,
+        maxScore: 1516,
+        items: [
+          { rank: 1, model: "Kimi-K3.1-Pro", org: "月之暗面 Moonshot", group: "CN_OS", score: 1512, note: "长文本与复杂搜索推理能力突出" },
+          { rank: 2, model: "Qwen4-Max", org: "阿里通义 Alibaba", group: "CN_OS", score: 1511, note: "全能旗舰，代码与工具调用生态完善" },
+          { rank: 3, model: "MiMo-V2.6-Pro (开源)", org: "小米 Xiaomi", group: "CN_OS", score: 1507, note: "MIT 开源协议黑马，极高性价比" },
+          { rank: 4, model: "GLM-5.4", org: "智谱 Zhipu", group: "CN_OS", score: 1506, note: "11月下旬刚迭代新版，Agent 表现稳健" },
+          { rank: 5, model: "Hunyuan-Hy4", org: "腾讯 Tencent", group: "CN_OS", score: 1505, note: "综合对话与多模态均衡" },
+          { rank: 6, model: "DeepSeek-V4-Pro (开源)", org: "深度求索 DeepSeek", group: "CN_OS", score: 1503, note: "推理与 API 成本控制之王" }
+        ]
+      }
+    };
+
+    // Vendor Badge Styling Map
+    const VENDOR_STYLES = {
+      Google: {
+        badge: "bg-blue-500/12 text-blue-600 dark:text-blue-400 border-blue-500/25",
+        bar: "from-blue-500 to-indigo-500"
+      },
+      Anthropic: {
+        badge: "bg-amber-500/12 text-amber-700 dark:text-amber-400 border-amber-500/25",
+        bar: "from-amber-500 to-orange-500"
+      },
+      OpenAI: {
+        badge: "bg-emerald-500/12 text-emerald-700 dark:text-emerald-400 border-emerald-500/25",
+        bar: "from-emerald-500 to-teal-500"
+      },
+      Meta: {
+        badge: "bg-sky-500/12 text-sky-700 dark:text-sky-400 border-sky-500/25",
+        bar: "from-sky-500 to-cyan-500"
+      },
+      CN_OS: {
+        badge: "bg-rose-500/12 text-rose-700 dark:text-rose-400 border-rose-500/25",
+        bar: "from-rose-500 to-pink-500"
+      }
+    };
+
+    // =========================================================================
+    // 2. Application State
+    // =========================================================================
+    let state = {
+      activeTab: 'arena',
+      activeVendor: 'ALL',
+      searchQuery: '',
+      sortBy: 'score', // 'score' | 'rank'
+      sortDir: 'desc'  // 'desc' | 'asc'
+    };
+
+    // =========================================================================
+    // 3. Helper Functions
+    // =========================================================================
+    function showToast(message, isSuccess = true) {
+      const toast = document.getElementById('toast');
+      const toastMsg = document.getElementById('toastMsg');
+      const toastIcon = document.getElementById('toastIcon');
+      toastMsg.textContent = message;
+      toastIcon.textContent = isSuccess ? '✓' : '!';
+      toastIcon.className = isSuccess ? 'text-emerald-400 font-bold' : 'text-amber-400 font-bold';
+      
+      toast.classList.remove('translate-y-20', 'opacity-0');
+      clearTimeout(window.__toastTimer);
+      window.__toastTimer = setTimeout(() => {
+        toast.classList.add('translate-y-20', 'opacity-0');
+      }, 2600);
+    }
+
+    function getCleanFullHTML() {
+      // Serialize current document HTML cleanly while resetting dynamic UI states
+      const docClone = document.documentElement.cloneNode(true);
+      const toastEl = docClone.querySelector('#toast');
+      if (toastEl) {
+        toastEl.classList.add('translate-y-20', 'opacity-0');
+      }
+      const modalEl = docClone.querySelector('#deployModal');
+      if (modalEl) {
+        modalEl.classList.add('hidden');
+        modalEl.classList.remove('flex');
+      }
+      return '<!DOCTYPE html>\n' + docClone.outerHTML;
+    }
+
+    // =========================================================================
+    // 4. Core Render Logic
+    // =========================================================================
+    function renderLeaderboard() {
+      const currentCategory = LEADERBOARD_DATA[state.activeTab];
+      const tbody = document.getElementById('leaderboardBody');
+      const emptyState = document.getElementById('emptyState');
+
+      // Update Header & Banner Texts
+      document.getElementById('scoreColumnTitle').textContent = currentCategory.scoreLabel;
+      document.getElementById('tabDescText').textContent = currentCategory.description;
+
+      // Update Sort Indicators
+      const rankIcon = document.getElementById('rankSortIcon');
+      const scoreIcon = document.getElementById('scoreSortIcon');
+      if (state.sortBy === 'rank') {
+        rankIcon.textContent = state.sortDir === 'asc' ? '↑' : '↓';
+        rankIcon.className = 'text-blue-500 font-bold';
+        scoreIcon.textContent = '↕';
+        scoreIcon.className = 'text-slate-400 opacity-50';
+      } else {
+        scoreIcon.textContent = state.sortDir === 'desc' ? '↓' : '↑';
+        scoreIcon.className = 'text-blue-500 font-bold';
+        rankIcon.textContent = '↕';
+        rankIcon.className = 'text-slate-400 opacity-50';
+      }
+
+      // Filter Items
+      const q = state.searchQuery.trim().toLowerCase();
+      let filtered = currentCategory.items.filter(item => {
+        const matchesVendor = state.activeVendor === 'ALL' || item.group === state.activeVendor;
+        const matchesQuery = !q ||
+          item.model.toLowerCase().includes(q) ||
+          item.org.toLowerCase().includes(q) ||
+          item.note.toLowerCase().includes(q);
+        return matchesVendor && matchesQuery;
+      });
+
+      // Sort Items
+      filtered.sort((a, b) => {
+        if (state.sortBy === 'rank') {
+          return state.sortDir === 'asc' ? a.rank - b.rank : b.rank - a.rank;
+        } else {
+          if (b.score !== a.score) {
+            return state.sortDir === 'desc' ? b.score - a.score : a.score - b.score;
+          }
+          return a.rank - b.rank;
+        }
+      });
+
+      document.getElementById('resultCount').textContent = `显示 ${filtered.length} / ${currentCategory.items.length} 款模型`;
+
+      if (filtered.length === 0) {
+        tbody.innerHTML = '';
+        emptyState.classList.remove('hidden');
+        return;
+      }
+      emptyState.classList.add('hidden');
+
+      // Build Rows
+      tbody.innerHTML = filtered.map(item => {
+        const style = VENDOR_STYLES[item.group] || VENDOR_STYLES.Google;
+        const range = currentCategory.maxScore - currentCategory.minScore;
+        const rawPct = range > 0 ? ((item.score - currentCategory.minScore) / range) * 100 : 80;
+        const barWidth = Math.max(12, Math.min(100, rawPct)).toFixed(1);
+
+        let rankBadge = `<span class="inline-flex items-center justify-center w-7 h-7 rounded-lg text-xs font-mono font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">${item.rank}</span>`;
+        if (item.rank === 1) {
+          rankBadge = `<span class="inline-flex items-center justify-center w-7 h-7 rounded-lg text-xs font-mono font-extrabold bg-amber-500/20 text-amber-600 dark:text-amber-400 border border-amber-500/30 shadow-sm">1</span>`;
+        } else if (item.rank === 2) {
+          rankBadge = `<span class="inline-flex items-center justify-center w-7 h-7 rounded-lg text-xs font-mono font-extrabold bg-slate-300/30 dark:bg-slate-600/40 text-slate-700 dark:text-slate-200 border border-slate-400/30">2</span>`;
+        } else if (item.rank === 3) {
+          rankBadge = `<span class="inline-flex items-center justify-center w-7 h-7 rounded-lg text-xs font-mono font-extrabold bg-orange-500/15 text-orange-600 dark:text-orange-400 border border-orange-500/25">3</span>`;
+        }
+
+        const isOpenSource = item.model.includes('开源');
+        const openTag = isOpenSource
+          ? `<span class="ml-2 px-1.5 py-0.5 rounded text-[10px] font-semibold bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">OPEN WEIGHTS</span>`
+          : '';
+
+        return `
+          <tr class="hover:bg-slate-50/90 dark:hover:bg-slate-800/45 transition-colors group">
+            <td class="py-4 px-4 sm:px-5 whitespace-nowrap">
+              ${rankBadge}
+            </td>
+            <td class="py-4 px-4 sm:px-5">
+              <div class="font-bold text-slate-900 dark:text-white flex items-center flex-wrap">
+                <span>${item.model}</span>
+                ${openTag}
+              </div>
+              <div class="text-xs text-slate-500 dark:text-slate-400 mt-1 md:hidden">${item.note}</div>
+            </td>
+            <td class="py-4 px-4 sm:px-5 whitespace-nowrap">
+              <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold border ${style.badge}">
+                ${item.org}
+              </span>
+            </td>
+            <td class="py-4 px-4 sm:px-5 whitespace-nowrap">
+              <div class="flex items-center space-x-3">
+                <span class="font-mono font-extrabold text-sm sm:text-base text-slate-900 dark:text-slate-100 w-12">${item.score}</span>
+                <div class="w-24 sm:w-32 h-2.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden hidden sm:block">
+                  <div class="h-full rounded-full bg-gradient-to-r ${style.bar} transition-all duration-500" style="width: ${barWidth}%"></div>
+                </div>
+              </div>
+            </td>
+            <td class="py-4 px-4 sm:px-5 text-slate-600 dark:text-slate-300 hidden md:table-cell leading-relaxed">
+              ${item.note}
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    // =========================================================================
+    // 5. Event Listeners
+    // =========================================================================
+    // Category Tabs
+    document.querySelectorAll('.cat-tab').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.cat-tab').forEach(b => {
+          b.className = 'cat-tab px-4 py-2.5 rounded-xl text-sm font-medium bg-white dark:bg-slatecard text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slateborder hover:bg-slate-100 dark:hover:bg-slate-800 transition-all';
+        });
+        btn.className = 'cat-tab px-4 py-2.5 rounded-xl text-sm font-semibold bg-blue-600 text-white shadow-sm shadow-blue-600/20 transition-all';
+        state.activeTab = btn.dataset.tab;
+        renderLeaderboard();
+      });
+    });
+
+    // Vendor Filter Buttons
+    document.querySelectorAll('.vendor-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.vendor-btn').forEach(b => {
+          b.className = 'vendor-btn px-3 py-1.5 rounded-lg text-xs font-medium bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors';
+        });
+        btn.className = 'vendor-btn px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-900 text-white dark:bg-white dark:text-slate-900 transition-colors';
+        state.activeVendor = btn.dataset.vendor;
+        renderLeaderboard();
+      });
+    });
+
+    // Search Input
+    const searchInput = document.getElementById('searchInput');
+    const clearSearchBtn = document.getElementById('clearSearchBtn');
+    searchInput.addEventListener('input', (e) => {
+      state.searchQuery = e.target.value;
+      clearSearchBtn.classList.toggle('hidden', !state.searchQuery);
+      renderLeaderboard();
+    });
+
+    clearSearchBtn.addEventListener('click', () => {
+      searchInput.value = '';
+      state.searchQuery = '';
+      clearSearchBtn.classList.add('hidden');
+      renderLeaderboard();
+    });
+
+    // Reset All Filters
+    document.getElementById('resetFiltersBtn').addEventListener('click', () => {
+      state.activeVendor = 'ALL';
+      state.searchQuery = '';
+      searchInput.value = '';
+      clearSearchBtn.classList.add('hidden');
+      document.querySelectorAll('.vendor-btn').forEach((b, idx) => {
+        b.className = idx === 0
+          ? 'vendor-btn px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-900 text-white dark:bg-white dark:text-slate-900 transition-colors'
+          : 'vendor-btn px-3 py-1.5 rounded-lg text-xs font-medium bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors';
+      });
+      renderLeaderboard();
+    });
+
+    // Table Column Sorting
+    document.getElementById('sortRankHeader').addEventListener('click', () => {
+      if (state.sortBy === 'rank') {
+        state.sortDir = state.sortDir === 'asc' ? 'desc' : 'asc';
+      } else {
+        state.sortBy = 'rank';
+        state.sortDir = 'asc';
+      }
+      renderLeaderboard();
+    });
+
+    document.getElementById('sortScoreHeader').addEventListener('click', () => {
+      if (state.sortBy === 'score') {
+        state.sortDir = state.sortDir === 'desc' ? 'asc' : 'desc';
+      } else {
+        state.sortBy = 'score';
+        state.sortDir = 'desc';
+      }
+      renderLeaderboard();
+    });
+
+    // Dark / Light Theme Toggle
+    document.getElementById('themeToggle').addEventListener('click', () => {
+      const isDark = document.documentElement.classList.toggle('dark');
+      document.getElementById('themeIcon').textContent = isDark ? '☀️' : '🌙';
+    });
+
+    // Download Single-File index.html
+    function triggerDownload() {
+      try {
+        const htmlContent = getCleanFullHTML();
+        const blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'index.html';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        showToast('已开始下载 index.html，可直接上传至 GitHub！');
+      } catch (err) {
+        showToast('下载触发失败，请尝试使用右上角“复制源码”', false);
+      }
+    }
+
+    document.getElementById('downloadHtmlBtn').addEventListener('click', triggerDownload);
+    document.getElementById('modalDownloadBtn').addEventListener('click', triggerDownload);
+
+    // Copy HTML Source Code (Using execCommand fallback for iframe safety)
+    document.getElementById('copySourceBtn').addEventListener('click', () => {
+      try {
+        const htmlContent = getCleanFullHTML();
+        const textarea = document.createElement('textarea');
+        textarea.value = htmlContent;
+        textarea.style.position = 'fixed';
+        textarea.style.opacity = '0';
+        document.body.appendChild(textarea);
+        textarea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textarea);
+        showToast('完整 HTML 源码已复制到剪贴板！');
+      } catch (err) {
+        showToast('复制失败，请点击下载按钮获取文件', false);
+      }
+    });
+
+    // Deploy Modal Controls
+    const deployModal = document.getElementById('deployModal');
+    document.getElementById('openDeployBtn').addEventListener('click', () => {
+      deployModal.classList.remove('hidden');
+      deployModal.classList.add('flex');
+    });
+    document.getElementById('closeDeployModal').addEventListener('click', () => {
+      deployModal.classList.add('hidden');
+      deployModal.classList.remove('flex');
+    });
+    deployModal.addEventListener('click', (e) => {
+      if (e.target === deployModal) {
+        deployModal.classList.add('hidden');
+        deployModal.classList.remove('flex');
+      }
+    });
+
+    // Initial Render
+    renderLeaderboard();
+  </script>
+
+</body></html>
